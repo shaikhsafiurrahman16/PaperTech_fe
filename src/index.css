@@ -1,0 +1,170 @@
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  background: #f8fafc;
+  color: #1e293b;
+}
+
+body.dark {
+  background: #0f172a;
+  color: #f1f5f9;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.ant-layout {
+  min-height: 100vh;
+}
+
+/* Dark mode overrides for better visibility */
+.dark .ant-menu {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+.dark .ant-menu-item {
+  color: #cbd5e1;
+}
+
+.dark .ant-menu-item:hover,
+.dark .ant-menu-item-selected {
+  color: #e0e7ff;
+}
+
+.dark .ant-card {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark .ant-input,
+.dark .ant-input-number,
+.dark .ant-select-selector,
+.dark .ant-picker {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+.dark .ant-input::placeholder {
+  color: #94a3b8;
+}
+
+.dark .ant-table {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+.dark .ant-table-thead > tr > th {
+  background-color: #0f172a;
+  color: #f1f5f9;
+  border-color: #334155;
+}
+
+.dark .ant-table-tbody > tr > td {
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark .ant-table-tbody > tr:hover > td {
+  background-color: #0f172a;
+}
+
+.dark .ant-typography {
+  color: #f1f5f9;
+}
+
+.dark .ant-typography-secondary {
+  color: #cbd5e1;
+}
+
+.dark .ant-btn-text {
+  color: #cbd5e1;
+}
+
+.dark .ant-btn-text:hover {
+  color: #f1f5f9;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.dark .ant-dropdown-menu {
+  background-color: #1e293b;
+}
+
+.dark .ant-dropdown-menu-item {
+  color: #f1f5f9;
+}
+
+.dark .ant-dropdown-menu-item:hover {
+  background-color: #0f172a;
+  color: #e0e7ff;
+}
+
+.dark .ant-form-item-label > label {
+  color: #e0e7ff;
+}
+
+.dark .ant-divider {
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.dark .ant-tabs-tab {
+  color: #cbd5e1;
+}
+
+.dark .ant-tabs-tab-active {
+  color: #e0e7ff;
+}
+
+.dark .ant-tabs-ink-bar {
+  background-color: #7c3aed;
+}
+
+.dark .ant-message-notice-content {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+/* Icon visibility in dark mode */
+.dark .anticon {
+  color: inherit;
+}
+
+.dark .ant-btn-primary {
+  background-color: #5b52d9;
+  border-color: #5b52d9;
+  color: #ffffff;
+}
+
+.dark .ant-btn-primary:hover,
+.dark .ant-btn-primary:focus {
+  background-color: #7c3aed;
+  border-color: #7c3aed;
+  color: #ffffff;
+}
+
+/* Scrollbar styling for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
