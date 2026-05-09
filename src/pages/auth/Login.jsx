@@ -101,6 +101,7 @@ function Login() {
   return (
     <ConfigProvider theme={themeConfig}>
       <div style={{ 
+        position: 'relative',
         display: 'flex', 
         minHeight: '100vh', 
         alignItems: 'center', 
@@ -110,6 +111,22 @@ function Login() {
           : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
         padding: '20px'
       }}>
+        <div style={{
+          position: 'absolute',
+          top: 24,
+          left: 24,
+          color: darkMode ? '#e0e7ff' : '#ffffff',
+          fontSize: 22,
+          fontWeight: 800,
+          letterSpacing: '3px',
+          padding: '8px 16px',
+          background: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.15)',
+          borderRadius: 12,
+          boxShadow: darkMode ? '0 12px 30px rgba(0,0,0,0.25)' : '0 12px 30px rgba(0,0,0,0.12)'
+        }}>
+          PAPERTECH
+        </div>
+
         <Card style={{ 
           width: '100%',
           maxWidth: 500, 
@@ -120,17 +137,16 @@ function Login() {
         }}>
           {/* Header */}
           <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <div style={{ fontSize: 56, marginBottom: 16 }}>📄</div>
             <Title level={2} style={{ 
               margin: 0, 
               color: darkMode ? '#e0e7ff' : '#5b52d9',
               letterSpacing: '2px',
               fontWeight: 700
             }}>
-              PAPERTECH
+              Welcome Back
             </Title>
             <Text style={{ fontSize: 13, marginTop: 12, display: 'block', color: darkMode ? '#cbd5e1' : '#64748b' }}>
-              Paper & Supplies Management System
+              Sign in to continue to PaperTech
             </Text>
           </div>
 

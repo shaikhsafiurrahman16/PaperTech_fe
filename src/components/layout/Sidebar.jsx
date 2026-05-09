@@ -23,6 +23,7 @@ function Sidebar({ darkMode }) {
     { key: '/customers', icon: <UserOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Customers' },
     { key: '/products', icon: <ShoppingOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Products' },
     { key: '/sales', icon: <FileTextOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Sales' },
+    { key: '/invoices', icon: <FileTextOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Invoices' },
     { key: '/payments', icon: <DollarOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Payments' },
     { key: '/reports', icon: <BarChartOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Reports' },
   ];

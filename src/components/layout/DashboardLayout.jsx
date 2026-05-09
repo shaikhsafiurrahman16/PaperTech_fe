@@ -8,6 +8,7 @@ import AdminDashboard from '../../pages/dashboard/AdminDashboard';
 import CustomerList from '../../pages/customers/CustomerList';
 import ProductList from '../../pages/products/ProductList';
 import SalesHistory from '../../pages/sales/SalesHistory';
+import InvoiceDetails from '../../pages/invoices/InvoiceDetails';
 import PaymentList from '../../pages/payments/PaymentList';
 import Reports from '../../pages/reports/Reports';
 import LedgerView from '../../pages/ledger/LedgerView';
@@ -80,11 +81,14 @@ function DashboardLayout() {
             justifyContent: 'flex-start', 
             fontWeight: 700, 
             color: '#fff', 
-            fontSize: 24, 
-            padding: '0 24px',
+            fontSize: 18, 
+            flexDirection: 'row', 
+            gap: 12,
+            padding: '0 20px',
             boxShadow: darkMode ? '0 2px 8px rgba(0,0,0,0.45)' : '0 2px 8px rgba(0,0,0,0.15)'
           }}>
-            PAPERTECH
+            <div style={{ fontSize: 28 }}>📄</div>
+            <div style={{ letterSpacing: '1px' }}>PAPERTECH</div>
           </div>
           <Sidebar darkMode={darkMode} />
         </Sider>
@@ -125,6 +129,8 @@ function DashboardLayout() {
                     <Route path="/customers" element={<CustomerList />} />
                     <Route path="/products" element={<ProductList />} />
                     <Route path="/sales" element={<SalesHistory />} />
+                    <Route path="/invoices" element={<SalesHistory />} />
+                    <Route path="/invoices/:id" element={<InvoiceDetails />} />
                     <Route path="/payments" element={<PaymentList />} />
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/ledger" element={<LedgerView />} />

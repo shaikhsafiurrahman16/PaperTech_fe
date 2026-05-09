@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useSelector } from 'react-redux';
+import { useEffect } from 'react';
 import { message } from 'antd';
 import Login from './pages/auth/Login';
 import AdminDashboard from './pages/dashboard/AdminDashboard';
@@ -13,10 +14,18 @@ import DashboardLayout from './components/layout/DashboardLayout';
 
 function ProtectedRoute({ children }) {
   const auth = useSelector(state => state.auth);
-  if (!auth.token) {
-    message.warning('Please login to continue');
+  const shouldRedirect = !auth.token;
+
+  useEffect(() => {
+    if (shouldRedirect) {
+      message.warning('Please login to continue');
+    }
+  }, [shouldRedirect]);
+
+  if (shouldRedirect) {
     return <Navigate to="/login" replace />;
   }
+
   return children;
 }
 

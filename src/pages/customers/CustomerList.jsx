@@ -1,14 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Drawer, Form, Input, InputNumber, message, Typography, Card, Row, Col, Statistic, Select, Space, Spin } from 'antd';
-import { PlusOutlined, FileExcelOutlined, FilePdfOutlined } from '@ant-design/icons';
+import { Table, Button, Drawer, Form, Input, InputNumber, Popconfirm, message, Typography, Card, Row, Col, Statistic, Select, Space, Spin } from 'antd';
+import { PlusOutlined, EditOutlined, DeleteOutlined, FileExcelOutlined, FilePdfOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import api from '../../api/axiosConfig';
 
+const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
+
 function CustomerList() {
   const [customers, setCustomers] = useState([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
   const [form] = Form.useForm();
@@ -29,12 +32,48 @@ function CustomerList() {
     fetchCustomers();
   }, []);
 
+  const handleCreateCustomer = () => {
+    setEditingCustomer(null);
+    form.resetFields();
+    setDrawerOpen(true);
+  };
+
+  const handleEditCustomer = customer => {
+    setEditingCustomer(customer);
+    setDrawerOpen(true);
+    form.setFieldsValue({
+      full_name: customer.full_name,
+      shop_name: customer.shop_name,
+      phone: customer.phone,
+      address: customer.address,
+      cnic: customer.cnic,
+      credit_limit: customer.credit_limit,
+      username: customer.username,
+    });
+  };
+
+  const handleDeleteCustomer = async id => {
+    try {
+      await api.delete(`/customers/${id}`);
+      message.success('Customer deleted successfully');
+      fetchCustomers();
+    } catch (error) {
+      message.error('Failed to delete customer');
+    }
+  };
+
   const onFinish = async values => {
     try {
       setLoading(true);
-      await api.post('/customers', values);
-      message.success('Customer saved successfully');
+      if (editingCustomer) {
+        await api.put(`/customers/${editingCustomer.id}`, values);
+        message.success('Customer updated successfully');
+      } else {
+        await api.post('/customers', values);
+        message.success('Customer saved successfully');
+      }
       setDrawerOpen(false);
+      setEditingCustomer(null);
       form.resetFields();
       fetchCustomers();
     } catch (error) {
@@ -56,9 +95,9 @@ function CustomerList() {
       'Phone': c.phone,
       'Address': c.address || '-',
       'CNIC': c.cnic || '-',
-      'Credit Limit': `Rs. ${c.credit_limit?.toFixed(2) || 0}`,
-      'Current Balance': `Rs. ${c.current_balance?.toFixed(2) || 0}`,
-      'قسم': c.customer_type === 'star' ? 'Star' : 'Local',
+      'Credit Limit': formatMoney(c.credit_limit),
+      'Current Balance': formatMoney(c.current_balance),
+      'Type': c.customer_type === 'star' ? 'Star' : 'Local',
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
@@ -70,31 +109,36 @@ function CustomerList() {
 
   const exportToPDF = () => {
     if (customers.length === 0) {
-      message.warning('کوئی ڈیٹا export کرنے کے لیے دستیاب نہیں');
+      message.warning('No data available to export');
       return;
     }
 
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text('📄 PAPERTECH - Customers Report', 14, 20);
-    
-    doc.setFontSize(10);
-    doc.text(`Report Date: ${new Date().toLocaleDateString('ur-PK')}`, 14, 28);
-    
+    doc.text('PAPERTECH', 14, 20);
+    doc.setFontSize(12);
+    doc.text('Customers Report', 14, 28);
+    doc.setFontSize(9);
+    doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 14, 34);
+    doc.text(`Total Customers: ${customers.length}`, 140, 20);
+    doc.text(`Total Balance: ${formatMoney(totalBalance)}`, 140, 26);
+
     const tableData = customers.map(c => [
       c.shop_name,
       c.full_name,
       c.phone,
-      `Rs. ${c.credit_limit?.toFixed(2) || 0}`,
-      `Rs. ${c.current_balance?.toFixed(2) || 0}`,
+      formatMoney(c.credit_limit),
+      formatMoney(c.current_balance),
       c.customer_type === 'star' ? 'Star' : 'Local',
     ]);
 
     doc.autoTable({
       head: [['Shop Name', 'Full Name', 'Phone', 'Credit Limit', 'Balance', 'Type']],
       body: tableData,
-      startY: 35,
+      startY: 40,
       margin: 10,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [37, 85, 135] },
     });
 
     doc.save(`Customers_Report_${new Date().toISOString().split('T')[0]}.pdf`);
@@ -122,13 +166,13 @@ function CustomerList() {
       title: 'Credit Limit', 
       dataIndex: 'credit_limit', 
       key: 'credit_limit',
-      render: (text) => `Rs. ${text?.toFixed(2) || 0}`
+      render: (text) => formatMoney(text)
     },
     { 
       title: 'Current Balance', 
       dataIndex: 'current_balance', 
       key: 'current_balance',
-      render: (text) => <span style={{ color: text > 0 ? '#ff4d4f' : '#52c41a', fontWeight: 'bold' }}>Rs. {text?.toFixed(2) || 0}</span>
+      render: (text) => <span style={{ color: text > 0 ? '#ff4d4f' : '#52c41a', fontWeight: 'bold' }}>{formatMoney(text)}</span>
     },
     {
       title: 'Type',
@@ -144,6 +188,27 @@ function CustomerList() {
           {type === 'star' ? '⭐ Star' : 'Local'}
         </span>
       )
+    },
+    {
+      title: 'Action',
+      key: 'action',
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            onClick={() => handleEditCustomer(record)}
+          />
+          <Popconfirm
+            title="Are you sure you want to delete this customer?"
+            onConfirm={() => handleDeleteCustomer(record.id)}
+            okText="Delete"
+            cancelText="Cancel"
+          >
+            <Button type="text" danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
+      ),
     }
   ];
 
@@ -205,9 +270,9 @@ function CustomerList() {
           <Button 
             type="primary" 
             icon={<PlusOutlined />} 
-            onClick={() => setDrawerOpen(true)}
+            onClick={handleCreateCustomer}
           >
-            نیا Customer شامل کریں
+            Add New Customer
           </Button>
           <Button 
             icon={<FileExcelOutlined />} 
@@ -242,10 +307,14 @@ function CustomerList() {
 
       {/* Create Customer Drawer */}
       <Drawer 
-        title="👥 نیا Customer شامل کریں" 
+        title={editingCustomer ? '👥 Edit Customer' : '👥 Add New Customer'} 
         open={drawerOpen} 
         width={450}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => {
+          setDrawerOpen(false);
+          setEditingCustomer(null);
+          form.resetFields();
+        }}
         bodyStyle={{ paddingBottom: 80 }}
       >
         <Form 
@@ -255,70 +324,79 @@ function CustomerList() {
         >
           <Form.Item 
             name="full_name" 
-            label="مالک کا مکمل نام" 
-            rules={[{ required: true, message: 'نام ضروری ہے' }]}
+            label="Owner Full Name" 
+            rules={[{ required: true, message: 'Name is required' }]}
           > 
-            <Input placeholder="مثال: احمد علی" size="large" />
+            <Input placeholder="e.g.: Ahmad Ali" size="large" />
           </Form.Item>
 
           <Form.Item 
             name="shop_name" 
-            label="دکان کا نام" 
-            rules={[{ required: true, message: 'دکان کا نام ضروری ہے' }]}
+            label="Shop Name" 
+            rules={[{ required: true, message: 'Shop name is required' }]}
           > 
-            <Input placeholder="مثال: احمد پیپر ہاؤس" size="large" />
+            <Input placeholder="e.g.: Ahmad Paper House" size="large" />
           </Form.Item>
 
           <Form.Item 
             name="phone" 
-            label="فون نمبر" 
-            rules={[{ required: true, message: 'فون ضروری ہے' }]}
+            label="Phone Number" 
+            rules={[{ required: true, message: 'Phone is required' }]}
           > 
-            <Input placeholder="مثال: 03001234567" size="large" />
+            <Input placeholder="e.g.: 03001234567" size="large" />
           </Form.Item>
 
           <Form.Item 
             name="address" 
-            label="پتہ"
+            label="Address"
           > 
-            <Input.TextArea rows={2} placeholder="دکان کا مکمل پتہ" />
+            <Input.TextArea rows={2} placeholder="Enter full shop address" />
           </Form.Item>
 
           <Form.Item 
             name="cnic" 
             label="CNIC"
           > 
-            <Input placeholder="مثال: 12345-1234567-1" />
+            <Input placeholder="e.g.: 12345-1234567-1" />
           </Form.Item>
 
           <Form.Item 
             name="credit_limit" 
-            label="کریڈٹ حد" 
-            rules={[{ type: 'number', min: 0, message: 'درست نمبر درج کریں' }]}
+            label="Credit Limit" 
+            rules={[{ type: 'number', min: 0, message: 'Enter a valid number' }]}
           >
             <InputNumber 
-              placeholder="مثال: 50000" 
+              placeholder="e.g.: 50000" 
               style={{ width: '100%' }}
               size="large"
               prefix="Rs. "
             />
           </Form.Item>
 
-          <Form.Item 
-            name="username" 
-            label="Username (Login کے لیے)" 
-            rules={[{ required: true, message: 'Username ضروری ہے' }]}
-          > 
-            <Input placeholder="مثال: ahmad_shop" size="large" />
-          </Form.Item>
+          {!editingCustomer && (
+            <>
+              <Form.Item 
+                name="username" 
+                label="Username (for Login)" 
+                rules={[{ required: true, message: 'Username is required' }]}
+              > 
+                <Input placeholder="e.g.: ahmad_shop" size="large" />
+              </Form.Item>
 
-          <Form.Item 
-            name="password" 
-            label="Password" 
-            rules={[{ required: true, message: 'Password ضروری ہے' }, { min: 6, message: 'کم از کم 6 حروف' }]}
-          > 
-            <Input.Password placeholder="محفوظ password" size="large" />
-          </Form.Item>
+              <Form.Item 
+                name="password" 
+                label="Password" 
+                rules={[{ required: true, message: 'Password is required' }, { min: 6, message: 'At least 6 characters' }]}
+              > 
+                <Input.Password placeholder="Secure password" size="large" />
+              </Form.Item>
+            </>
+          )}
+          {editingCustomer && (
+            <Form.Item label="Username">
+              <Input value={editingCustomer.username} disabled size="large" />
+            </Form.Item>
+          )}
 
           <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
             <Button 
@@ -328,7 +406,7 @@ function CustomerList() {
               }}
               size="large"
             >
-              منسوخ
+              Cancel
             </Button>
             <Button 
               type="primary" 
@@ -336,7 +414,7 @@ function CustomerList() {
               loading={loading}
               size="large"
             >
-              محفوظ کریں
+              Save
             </Button>
           </Space>
         </Form>

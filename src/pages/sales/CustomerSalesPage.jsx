@@ -7,6 +7,8 @@ import 'jspdf-autotable';
 import api from '../../api/axiosConfig';
 import { useSelector } from 'react-redux';
 
+const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
+
 function CustomerSalesPage() {
   const [sales, setSales] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -86,11 +88,11 @@ function CustomerSalesPage() {
     
     const tableData = sales.map(sale => [
       sale.invoice_number,
-      `Rs. ${sale.total_amount?.toFixed(2) || 0}`,
-      `Rs. ${sale.discount?.toFixed(2) || 0}`,
-      `Rs. ${sale.grand_total?.toFixed(2) || 0}`,
-      `Rs. ${sale.payment_received?.toFixed(2) || 0}`,
-      `Rs. ${sale.remaining_balance?.toFixed(2) || 0}`,
+      formatMoney(sale.total_amount),
+      formatMoney(sale.discount),
+      formatMoney(sale.grand_total),
+      formatMoney(sale.payment_received),
+      formatMoney(sale.remaining_balance),
       sale.sale_type,
       new Date(sale.created_at).toLocaleDateString('en-US'),
     ]);
@@ -133,35 +135,35 @@ function CustomerSalesPage() {
       dataIndex: 'total_amount',
       key: 'total_amount',
       width: 100,
-      render: (text) => `Rs. ${text?.toFixed(2) || 0}`,
+      render: (text) => formatMoney(text),
     },
     {
       title: 'Discount',
       dataIndex: 'discount',
       key: 'discount',
       width: 100,
-      render: (text) => `Rs. ${text?.toFixed(2) || 0}`,
+      render: (text) => formatMoney(text),
     },
     {
       title: 'Grand Total',
       dataIndex: 'grand_total',
       key: 'grand_total',
       width: 110,
-      render: (text) => <strong style={{ color: '#1890ff' }}>Rs. {text?.toFixed(2) || 0}</strong>,
+      render: (text) => <strong style={{ color: '#1890ff' }}>{formatMoney(text)}</strong>,
     },
     {
       title: 'Payment',
       dataIndex: 'payment_received',
       key: 'payment_received',
       width: 100,
-      render: (text) => `Rs. ${text?.toFixed(2) || 0}`,
+      render: (text) => formatMoney(text),
     },
     {
       title: 'Balance',
       dataIndex: 'remaining_balance',
       key: 'remaining_balance',
       width: 100,
-      render: (text) => <span style={{ color: text > 0 ? '#ff4d4f' : '#52c41a', fontWeight: 'bold' }}>Rs. {text?.toFixed(2) || 0}</span>,
+      render: (text) => <span style={{ color: text > 0 ? '#ff4d4f' : '#52c41a', fontWeight: 'bold' }}>{formatMoney(text)}</span>,
     },
     {
       title: 'Type',
@@ -207,7 +209,7 @@ function CustomerSalesPage() {
             {customerInfo && (
               <div>
                 <div style={{ fontSize: 12, opacity: 0.9 }}>Available Credit</div>
-                <div style={{ fontSize: 20, fontWeight: 'bold' }}>Rs. {customerInfo.credit_limit?.toFixed(2) || 0}</div>
+                <div style={{ fontSize: 20, fontWeight: 'bold' }}>{formatMoney(customerInfo.credit_limit)}</div>
               </div>
             )}
           </Col>
@@ -316,7 +318,7 @@ function CustomerSalesPage() {
         <Row>
           <Col span={24}>
             <div style={{ color: '#0050b3' }}>
-              <strong>نوٹ:</strong> یہ صفحہ صرف آپ کی تمام sales کو دکھاتا ہے۔ آپ کسی نئی sale نہیں بنا سکتے۔ Admin کے ذریعے sale شامل کریں۔
+              <strong>Note:</strong> This page only shows your past sales. You cannot create a new sale here. Please ask the admin to add sales.
             </div>
           </Col>
         </Row>

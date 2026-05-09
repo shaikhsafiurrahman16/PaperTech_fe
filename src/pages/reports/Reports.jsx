@@ -6,6 +6,8 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import api from '../../api/axiosConfig';
 
+const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
+
 function Reports() {
   const [summary, setSummary] = useState({});
   const [stock, setStock] = useState([]);
@@ -64,7 +66,7 @@ function Reports() {
     const balancesData = balances.map(c => ({
       'Shop': c.shop_name,
       'Customer': c.full_name,
-      'Balance': `Rs. ${c.current_balance?.toFixed(2) || 0}`,
+      'Balance': formatMoney(c.current_balance),
     }));
     const balancesSheet = XLSX.utils.json_to_sheet(balancesData);
     XLSX.utils.book_append_sheet(wb, balancesSheet, 'Balances');
@@ -158,7 +160,7 @@ function Reports() {
           <Col xs={24} sm={12} md={6}>
             <Card>
               <Statistic 
-                title="کل Sales" 
+                title="Total Sales" 
                 value={summary.total_sales || 0}
                 valueStyle={{ color: '#1890ff' }}
               />
@@ -167,7 +169,7 @@ function Reports() {
           <Col xs={24} sm={12} md={6}>
             <Card>
               <Statistic 
-                title="کل Customers" 
+                title="Total Customers" 
                 value={summary.total_customers || 0}
                 valueStyle={{ color: '#52c41a' }}
               />
@@ -176,7 +178,7 @@ function Reports() {
           <Col xs={24} sm={12} md={6}>
             <Card>
               <Statistic 
-                title="زیر التوا ادائیگیاں" 
+                title="Pending Payments" 
                 value={summary.total_pending_payments || 0}
                 valueStyle={{ color: '#ff4d4f' }}
               />
@@ -240,21 +242,21 @@ function Reports() {
           <Table 
             columns={[
               { 
-                title: 'دکان', 
+                title: 'Shop', 
                 dataIndex: 'shop_name', 
                 key: 'shop_name',
                 render: (text) => <strong>{text}</strong>
               },
               { 
-                title: 'مالک', 
+                title: 'Owner', 
                 dataIndex: 'full_name', 
                 key: 'full_name' 
               },
               { 
-                title: 'بقایا', 
+                title: 'Balance', 
                 dataIndex: 'current_balance', 
                 key: 'current_balance',
-                render: (text) => <span style={{ color: text > 0 ? '#ff4d4f' : '#52c41a', fontWeight: 'bold' }}>Rs. {text?.toFixed(2) || 0}</span>
+                render: (text) => <span style={{ color: text > 0 ? '#ff4d4f' : '#52c41a', fontWeight: 'bold' }}>{formatMoney(text)}</span>
               }
             ]} 
             dataSource={balances.map((b, idx) => ({ ...b, key: b.id || idx }))}
@@ -278,7 +280,7 @@ function Reports() {
                 title: 'Total Sales', 
                 dataIndex: 'total_sales', 
                 key: 'total_sales',
-                render: (text) => `Rs. ${text?.toFixed(2) || 0}`
+                render: (text) => formatMoney(text)
               }
             ]} 
             dataSource={monthlySales.map((m, idx) => ({ ...m, key: m.period || idx }))}

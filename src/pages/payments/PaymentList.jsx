@@ -6,6 +6,8 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import api from '../../api/axiosConfig';
 
+const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
+
 function PaymentList() {
   const [payments, setPayments] = useState([]);
   const [customers, setCustomers] = useState([]);
@@ -43,7 +45,7 @@ function PaymentList() {
       form.resetFields();
       fetchData();
     } catch (error) {
-      message.error(error.response?.data?.message || 'ناکام');
+      message.error(error.response?.data?.message || 'Failed to save payment');
     } finally {
       setLoading(false);
     }
@@ -51,28 +53,28 @@ function PaymentList() {
 
   const exportToExcel = () => {
     if (payments.length === 0) {
-      message.warning('کوئی ڈیٹا export کرنے کے لیے دستیاب نہیں');
+      message.warning('No data available to export');
       return;
     }
 
     const data = payments.map(p => ({
       'Customer': p.shop_name,
-      'رقم': `Rs. ${p.amount?.toFixed(2) || 0}`,
-      'طریقہ': p.payment_method,
-      'نوٹس': p.notes || '-',
-      'تاریخ': new Date(p.created_at).toLocaleDateString('ur-PK'),
+      'Amount': formatMoney(p.amount),
+      'Method': p.payment_method,
+      'Notes': p.notes || '-',
+      'Date': new Date(p.created_at).toLocaleDateString('en-US'),
     }));
 
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'Payments');
     XLSX.writeFile(wb, `Payments_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
-    message.success('Excel میں export ہو گیا');
+    message.success('Exported to Excel successfully');
   };
 
   const exportToPDF = () => {
     if (payments.length === 0) {
-      message.warning('کوئی ڈیٹا export کرنے کے لیے دستیاب نہیں');
+      message.warning('No data available to export');
       return;
     }
 
@@ -81,13 +83,11 @@ function PaymentList() {
     doc.text('📄 PAPERTECH - Payments Report', 14, 20);
     
     doc.setFontSize(10);
-    doc.text(`Report Date: ${new Date().toLocaleDateString('ur-PK')}`, 14, 28);
+    doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 14, 28);
     
     const tableData = payments.map(p => [
       p.shop_name,
-      `Rs. ${p.amount?.toFixed(2) || 0}`,
-      p.payment_method,
-      new Date(p.created_at).toLocaleDateString('ur-PK'),
+      formatMoney(p.amount),
     ]);
 
     doc.autoTable({
@@ -98,7 +98,7 @@ function PaymentList() {
     });
 
     doc.save(`Payments_Report_${new Date().toISOString().split('T')[0]}.pdf`);
-    message.success('PDF میں export ہو گیا');
+    message.success('Exported to PDF successfully');
   };
 
   const columns = [
@@ -112,7 +112,7 @@ function PaymentList() {
       title: 'Amount', 
       dataIndex: 'amount', 
       key: 'amount',
-      render: (text) => <span style={{ color: '#52c41a', fontWeight: 'bold' }}>Rs. {text?.toFixed(2) || 0}</span>
+      render: (text) => <span style={{ color: '#52c41a', fontWeight: 'bold' }}>{formatMoney(text)}</span>
     },
     { 
       title: 'Method', 

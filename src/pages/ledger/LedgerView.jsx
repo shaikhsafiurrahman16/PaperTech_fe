@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Select, Table, Card, Typography, message, Row, Col, Statistic, Spin, Empty, Tag } from 'antd';
 import api from '../../api/axiosConfig';
 
+const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
+
 function LedgerView() {
   const [customers, setCustomers] = useState([]);
   const [ledger, setLedger] = useState([]);
@@ -64,19 +66,19 @@ function LedgerView() {
       title: 'Amount', 
       dataIndex: 'amount', 
       key: 'amount',
-      render: (text) => `Rs. ${text?.toFixed(2) || 0}`
+      render: (text) => formatMoney(text)
     },
     { 
       title: 'Previous Balance', 
       dataIndex: 'previous_balance', 
       key: 'previous_balance',
-      render: (text) => `Rs. ${text?.toFixed(2) || 0}`
+      render: (text) => formatMoney(text)
     },
     { 
       title: 'Current Balance', 
       dataIndex: 'current_balance', 
       key: 'current_balance',
-      render: (text) => <strong style={{ color: text > 0 ? '#ff4d4f' : '#52c41a' }}>Rs. {text?.toFixed(2) || 0}</strong>
+      render: (text) => <strong style={{ color: text > 0 ? '#ff4d4f' : '#52c41a' }}>{formatMoney(text)}</strong>
     },
     { 
       title: 'Notes', 
@@ -115,7 +117,7 @@ function LedgerView() {
           <Col xs={24} sm={12} md={8}>
             <Card>
               <Statistic 
-                title="کریڈٹ حد" 
+                title="Credit Limit" 
                 value={creditLimit}
                 prefix="Rs. "
                 valueStyle={{ color: '#1890ff' }}
@@ -125,7 +127,7 @@ function LedgerView() {
           <Col xs={24} sm={12} md={8}>
             <Card>
               <Statistic 
-                title="موجودہ بقایا" 
+                title="Current Balance" 
                 value={currentBalance}
                 prefix="Rs. "
                 valueStyle={{ color: currentBalance > 0 ? '#ff4d4f' : '#52c41a' }}
@@ -135,7 +137,7 @@ function LedgerView() {
           <Col xs={24} sm={12} md={8}>
             <Card>
               <Statistic 
-                title="دستیاب کریڈٹ" 
+                title="Available Credit" 
                 value={Math.max(0, creditLimit - currentBalance)}
                 prefix="Rs. "
                 valueStyle={{ color: '#52c41a' }}
@@ -168,7 +170,7 @@ function LedgerView() {
       {!selectedCustomer && (
         <Card style={{ textAlign: 'center', padding: 48 }}>
           <Empty 
-            description="Customer منتخب کریں" 
+            description="Please select a customer" 
           />
         </Card>
       )}
