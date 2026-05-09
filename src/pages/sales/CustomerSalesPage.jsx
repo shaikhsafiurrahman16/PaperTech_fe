@@ -22,7 +22,7 @@ function CustomerSalesPage() {
 
   const fetchCustomerInfo = async () => {
     try {
-      const response = await api.get(`/api/customers/${user?.id}`);
+      const response = await api.get(`customers/${user?.id}`);
       if (response.data.success) {
         setCustomerInfo(response.data.data);
       }
@@ -34,7 +34,7 @@ function CustomerSalesPage() {
   const fetchSales = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/sales');
+      const response = await api.get('/sales');
       setSales(response.data.data || []);
     } catch (error) {
       message.error('Failed to load sales');

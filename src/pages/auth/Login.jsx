@@ -1,176 +1,196 @@
-import { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
-import { useNavigate } from 'react-router-dom';
-import { Card, Form, Input, Button, Typography, message, Tabs, ConfigProvider, theme } from 'antd';
-import { LockOutlined, UserOutlined } from '@ant-design/icons';
-import api from '../../api/axiosConfig';
-import { loginSuccess } from '../../store/authSlice';
+import { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import {
+  Card,
+  Form,
+  Input,
+  Button,
+  Typography,
+  ConfigProvider,
+  theme,
+  App,
+} from "antd";
+import { LockOutlined, UserOutlined } from "@ant-design/icons";
+import api from "../../api/axiosConfig";
+import { loginSuccess } from "../../store/authSlice";
 
-const { Title, Text } = Typography;
+const { Text } = Typography;
 
 function Login() {
+  const { message } = App.useApp();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('admin');
-  const [darkMode, setDarkMode] = useState(localStorage.getItem('papertech_darkMode') === 'true');
+  const primaryBrandColor = "#818cf8";
+
+  const [darkMode] = useState(
+    localStorage.getItem("papertech_darkMode") === "true",
+  );
 
   useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
+    document.documentElement.classList.toggle("dark", darkMode);
   }, [darkMode]);
 
-  const onFinish = async values => {
+  const onFinish = async (values) => {
     try {
       setLoading(true);
-      const response = await api.post('/auth/login', values);
-      dispatch(loginSuccess({ token: response.data.data.token, user: response.data.data }));
-      message.success(activeTab === 'admin' ? 'Admin Login Successful' : 'Customer Login Successful');
-      navigate('/dashboard');
+      const response = await api.post("/auth/login", values);
+      dispatch(
+        loginSuccess({
+          token: response.data.data.token,
+          user: response.data.data,
+        }),
+      );
+      message.success("Login Successful");
+      navigate("/dashboard");
     } catch (error) {
-      message.error(error.response?.data?.message || 'Login failed');
+      console.log(error)
+      message.error(error.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
     }
   };
 
-  const adminTabContent = (
-    <Form name="admin-login" layout="vertical" onFinish={onFinish}>
-      <Form.Item name="username" label="Username" rules={[{ required: true, message: 'Please enter your username' }]}> 
-        <Input 
-          placeholder="Enter your username" 
-          size="large"
-          prefix={<UserOutlined />}
-        />
-      </Form.Item>
-      <Form.Item name="password" label="Password" rules={[{ required: true, message: 'Please enter your password' }]}> 
-        <Input.Password 
-          placeholder="Enter your password" 
-          size="large"
-          prefix={<LockOutlined />}
-        />
-      </Form.Item>
-      <Form.Item>
-        <Button type="primary" htmlType="submit" block loading={loading} size="large">
-          Sign In as Admin
-        </Button>
-      </Form.Item>
-    </Form>
-  );
-
-  const customerTabContent = (
-    <Form name="customer-login" layout="vertical" onFinish={onFinish}>
-      <Form.Item name="username" label="Username" rules={[{ required: true, message: 'Please enter your username' }]}> 
-        <Input 
-          placeholder="Enter your username" 
-          size="large"
-          prefix={<UserOutlined />}
-        />
-      </Form.Item>
-      <Form.Item name="password" label="Password" rules={[{ required: true, message: 'Please enter your password' }]}> 
-        <Input.Password 
-          placeholder="Enter your password" 
-          size="large"
-          prefix={<LockOutlined />}
-        />
-      </Form.Item>
-      <Form.Item>
-        <Button type="primary" htmlType="submit" block loading={loading} size="large">
-          Sign In as Customer
-        </Button>
-      </Form.Item>
-    </Form>
-  );
-
   const themeConfig = {
     token: {
-      colorPrimary: '#5b52d9',
-      colorBgBase: darkMode ? '#0f172a' : '#ffffff',
-      colorTextBase: darkMode ? '#f1f5f9' : '#1e293b',
-      colorBorder: darkMode ? '#334155' : '#e2e8f0',
+      colorPrimary: primaryBrandColor,
+      colorBgBase: darkMode ? "#0f172a" : "#ffffff",
+      colorTextBase: darkMode ? "#f1f5f9" : "#1e293b",
       borderRadius: 12,
-      fontSizeHeading1: 32,
-      fontSizeHeading2: 28,
+      controlHeight: 45,
     },
     algorithm: darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
   };
 
   return (
     <ConfigProvider theme={themeConfig}>
-      <div style={{ 
-        position: 'relative',
-        display: 'flex', 
-        minHeight: '100vh', 
-        alignItems: 'center', 
-        justifyContent: 'center', 
-        background: darkMode 
-          ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)'
-          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        padding: '20px'
-      }}>
-        <div style={{
-          position: 'absolute',
-          top: 24,
-          left: 24,
-          color: darkMode ? '#e0e7ff' : '#ffffff',
-          fontSize: 22,
-          fontWeight: 800,
-          letterSpacing: '3px',
-          padding: '8px 16px',
-          background: darkMode ? 'rgba(15, 23, 42, 0.7)' : 'rgba(255, 255, 255, 0.15)',
-          borderRadius: 12,
-          boxShadow: darkMode ? '0 12px 30px rgba(0,0,0,0.25)' : '0 12px 30px rgba(0,0,0,0.12)'
-        }}>
-          PAPERTECH
-        </div>
-
-        <Card style={{ 
-          width: '100%',
-          maxWidth: 500, 
-          borderRadius: 16,
-          boxShadow: darkMode ? '0 20px 60px rgba(0,0,0,0.5)' : '0 20px 60px rgba(0,0,0,0.3)',
-          border: darkMode ? '1px solid #334155' : 'none',
-          backgroundColor: darkMode ? '#1e293b' : '#ffffff'
-        }}>
-          {/* Header */}
-          <div style={{ textAlign: 'center', marginBottom: 32 }}>
-            <Title level={2} style={{ 
-              margin: 0, 
-              color: darkMode ? '#e0e7ff' : '#5b52d9',
-              letterSpacing: '2px',
-              fontWeight: 700
-            }}>
-              Welcome Back
-            </Title>
-            <Text style={{ fontSize: 13, marginTop: 12, display: 'block', color: darkMode ? '#cbd5e1' : '#64748b' }}>
-              Sign in to continue to PaperTech
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          padding: 24,
+          background: darkMode
+            ? "radial-gradient(circle at top right, #1e1b4b, #0f172a)"
+            : "radial-gradient(circle at top right, #eef2ff, #f8fafc)",
+          transition: "all 0.5s ease",
+        }}
+      >
+        <Card
+          bordered={false}
+          style={{
+            width: "100%",
+            maxWidth: 400,
+            borderRadius: 24,
+            backdropFilter: "blur(20px)",
+            background: darkMode
+              ? "rgba(30, 41, 59, 0.4)"
+              : "rgba(255, 255, 255, 0.7)",
+            boxShadow: darkMode
+              ? "0 25px 50px -12px rgba(0, 0, 0, 0.5)"
+              : "0 25px 50px -12px rgba(0, 0, 0, 0.1)",
+            border: darkMode
+              ? "1px solid rgba(255, 255, 255, 0.1)"
+              : "1px solid rgba(0, 0, 0, 0.05)",
+          }}
+        >
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div
+              style={{
+                fontSize: 28,
+                fontWeight: 800,
+                letterSpacing: "-0.5px",
+                color: primaryBrandColor,
+                marginBottom: 8,
+              }}
+            >
+              PAPER<span style={{ opacity: 0.7 }}>TECH</span>
+            </div>
+            <Text
+              style={{
+                fontSize: 15,
+                color: darkMode ? "#94a3b8" : "#64748b",
+                fontWeight: 400,
+              }}
+            >
+              Enter your credentials to access your account
             </Text>
           </div>
 
-          {/* Login Tabs */}
-          <Tabs 
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            items={[
-              {
-                key: 'admin',
-                label: 'Admin Login',
-                children: adminTabContent,
-              },
-              {
-                key: 'customer',
-                label: 'Customer Login',
-                children: customerTabContent,
-              },
-            ]}
-          />
+          <Form layout="vertical" onFinish={onFinish} requiredMark={false}>
+            <Form.Item
+              name="username"
+              rules={[{ required: true, message: "Username is required" }]}
+            >
+              <Input
+                prefix={
+                  <UserOutlined
+                    style={{ color: primaryBrandColor, marginRight: 8 }}
+                  />
+                }
+                placeholder="Username"
+                style={{
+                  background: darkMode ? "rgba(15, 23, 42, 0.6)" : "#fff",
+                  border: "1px solid rgba(129, 140, 248, 0.2)",
+                }}
+              />
+            </Form.Item>
 
-          {/* Footer */}
-          <div style={{ textAlign: 'center', marginTop: 24, borderTop: darkMode ? '1px solid #334155' : '1px solid #e2e8f0', paddingTop: 16 }}>
-            <Text style={{ fontSize: 11, color: darkMode ? '#94a3b8' : '#78716c' }}>
+            <Form.Item
+              name="password"
+              rules={[{ required: true, message: "Password is required" }]}
+              style={{ marginBottom: 12 }}
+            >
+              <Input.Password
+                prefix={
+                  <LockOutlined
+                    style={{ color: primaryBrandColor, marginRight: 8 }}
+                  />
+                }
+                placeholder="Password"
+                style={{
+                  background: darkMode ? "rgba(15, 23, 42, 0.6)" : "#fff",
+                  border: "1px solid rgba(129, 140, 248, 0.2)",
+                }}
+              />
+            </Form.Item>
+
+            <div style={{ textAlign: "right", marginBottom: 24 }}>
+              <Button
+                type="link"
+                size="small"
+                style={{ color: primaryBrandColor, padding: 0 }}
+              >
+                Forgot Password?
+              </Button>
+            </div>
+
+            <Button
+              type="primary"
+              htmlType="submit"
+              block
+              loading={loading}
+              style={{
+                height: 50,
+                borderRadius: 12,
+                fontWeight: 700,
+                fontSize: 16,
+                background: `linear-gradient(135deg, ${primaryBrandColor}, #6366f1)`,
+                boxShadow: `0 10px 15px -3px rgba(99, 102, 241, 0.3)`,
+                border: "none",
+                marginTop: 10,
+              }}
+            >
+              Sign In
+            </Button>
+          </Form>
+
+          <div style={{ textAlign: "center", marginTop: 32 }}>
+            <Text
+              style={{ fontSize: 13, color: darkMode ? "#475569" : "#cbd5e1" }}
+            >
               © 2026 PaperTech Solutions. All rights reserved.
             </Text>
           </div>

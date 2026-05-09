@@ -168,3 +168,21 @@ body.dark {
 .dark ::-webkit-scrollbar-thumb:hover {
   background: #64748b;
 }
+
+.dark .ant-message-notice-content {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border: 1px solid #334155;
+}
+
+.dark .ant-message-custom-content {
+  color: #f1f5f9 !important;
+}
+
+.dark .ant-message-success .anticon {
+  color: #22c55e !important;
+}
+
+.dark .ant-message-error .anticon {
+  color: #ef4444 !important;
+}
