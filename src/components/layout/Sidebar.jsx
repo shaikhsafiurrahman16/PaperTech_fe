@@ -9,13 +9,11 @@ import {
   LogoutOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useDispatch, useSelector } from 'react-redux';
-import { logout } from '../../store/authSlice';
+import { useSelector } from 'react-redux';
 
-function Sidebar({ darkMode }) {
+function Sidebar({ darkMode, onLogoutRequest }) {
   const navigate = useNavigate();
   const location = useLocation();
-  const dispatch = useDispatch();
   const { user } = useSelector(state => state.auth);
 
   const adminMenuItems = [
@@ -36,8 +34,7 @@ function Sidebar({ darkMode }) {
 
   const onMenuClick = ({ key }) => {
     if (key === 'logout') {
-      dispatch(logout());
-      navigate('/login');
+      onLogoutRequest?.();
       return;
     }
     navigate(key);

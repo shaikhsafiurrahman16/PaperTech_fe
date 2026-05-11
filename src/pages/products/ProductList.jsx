@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import {
   Table,
   Button,
-  Modal,
   Form,
   Input,
   InputNumber,
@@ -17,6 +16,8 @@ import {
   Spin,
   Tooltip,
   Drawer,
+  Modal,
+  Select,
 } from "antd";
 import {
   PlusOutlined,
@@ -29,7 +30,60 @@ import {
 import api from "../../api/axiosConfig";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
+
+const PAPER_TYPE_OPTIONS = [
+  "carbon",
+  "Indonesia",
+  "Crown",
+  "Local",
+  "Bleach",
+  "art",
+  "Matt",
+  "Sticker",
+  "Everycard",
+  "News",
+  "Filecard",
+];
+
+const SIZE_OPTIONS = [
+  "23x36",
+  "20x30",
+  "25x36",
+  "27x34",
+  "18",
+  "23",
+  "17x27",
+  "30",
+  "40",
+  "22",
+  "28",
+];
+
+const GRAM_OPTIONS = [
+  42,
+  52,
+  60,
+  68,
+  70,
+  75,
+  80,
+  90,
+  100,
+  150,
+  113,
+  128,
+  230,
+  250,
+  300,
+  350,
+  400,
+];
+
+const UNIT_OPTIONS = ["Card", "Paper", "sticker"];
+
+const getSheetsPerPack = (unitType) =>
+  String(unitType || "").toLowerCase() === "paper" ? 500 : 100;
 
 function ProductList() {
   const [products, setProducts] = useState([]);
@@ -39,6 +93,7 @@ function ProductList() {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const selectedUnitType = Form.useWatch("unit_type", form);
 
   const fetchProducts = async () => {
     try {
@@ -56,9 +111,16 @@ function ProductList() {
     fetchProducts();
   }, []);
 
+  useEffect(() => {
+    if (modalOpen && selectedUnitType) {
+      form.setFieldValue("sheets_per_pack", getSheetsPerPack(selectedUnitType));
+    }
+  }, [form, modalOpen, selectedUnitType]);
+
   const handleOpenProductModal = () => {
     setEditingProduct(null);
     form.resetFields();
+    form.setFieldsValue({ unit_type: "Paper", sheets_per_pack: 500 });
     setModalOpen(true);
   };
 
@@ -68,12 +130,14 @@ function ProductList() {
     form.setFieldsValue({
       name: product.name,
       product_type: product.product_type,
+      size: product.size,
+      gram: product.gram ? Number(product.gram) : undefined,
       unit_type: product.unit_type,
-      sheets_per_pack: product.sheets_per_pack,
-      cost_price: product.cost_price,
-      sale_price: product.sale_price,
-      current_stock: product.current_stock,
-      min_stock_alert: product.min_stock_alert,
+      sheets_per_pack: getSheetsPerPack(product.unit_type),
+      cost_price: Number(product.cost_price || 0),
+      sale_price: Number(product.sale_price || 0),
+      current_stock: Number(product.current_stock || 0),
+      min_stock_alert: Number(product.min_stock_alert || 0),
       description: product.description,
     });
   };
@@ -81,11 +145,20 @@ function ProductList() {
   const onFinish = async (values) => {
     try {
       setLoading(true);
+      const payload = {
+        ...values,
+        sheets_per_pack: getSheetsPerPack(values.unit_type),
+        gram: Number(values.gram || 0),
+        cost_price: Number(values.cost_price || 0),
+        sale_price: Number(values.sale_price || 0),
+        current_stock: Number(values.current_stock || 0),
+        min_stock_alert: Number(values.min_stock_alert || 0),
+      };
       if (editingProduct) {
-        await api.put(`/products/${editingProduct.id}`, values);
+        await api.put(`/products/${editingProduct.id}`, payload);
         message.success("Product updated successfully");
       } else {
-        await api.post("/products", values);
+        await api.post("/products", payload);
         message.success("Product saved successfully");
       }
       setModalOpen(false);
@@ -136,7 +209,10 @@ function ProductList() {
     const data = products.map((p) => ({
       Name: p.name,
       Type: p.product_type,
+      Size: p.size,
+      Gram: p.gram,
       Unit: p.unit_type,
+      "Sheets Per Pack": p.sheets_per_pack,
       "Cost Price": `Rs. ${p.cost_price}`,
       "Sale Price": `Rs. ${p.sale_price}`,
       "Current Stock": p.current_stock,
@@ -162,14 +238,18 @@ function ProductList() {
     const tableData = products.map((p) => [
       p.name,
       p.product_type,
+      p.size || "",
+      p.gram || "",
+      p.unit_type,
+      p.sheets_per_pack,
       `Rs. ${Number(p.cost_price).toFixed(2)}`,
       `Rs. ${Number(p.sale_price).toFixed(2)}`,
       p.current_stock,
       p.min_stock_alert,
     ]);
 
-    doc.autoTable({
-      head: [["Name", "Type", "Cost Price", "Sale Price", "Stock", "Alert"]],
+    autoTable(doc, {
+      head: [["Name", "Type", "Size", "Gram", "Unit", "Sheets", "Cost Price", "Sale Price", "Stock", "Alert"]],
       body: tableData,
       startY: 38,
       margin: 10,
@@ -196,7 +276,14 @@ function ProductList() {
       ),
     },
     { title: "Type", dataIndex: "product_type", key: "product_type" },
+    { title: "Size", dataIndex: "size", key: "size" },
+    { title: "Gram", dataIndex: "gram", key: "gram" },
     { title: "Unit", dataIndex: "unit_type", key: "unit_type" },
+    {
+      title: "Sheets/Pack",
+      dataIndex: "sheets_per_pack",
+      key: "sheets_per_pack",
+    },
     {
       title: "Cost Price",
       dataIndex: "cost_price",
@@ -222,6 +309,8 @@ function ProductList() {
     {
       title: "Action",
       key: "action",
+      width: 120,
+      fixed: "right",
       render: (_, record) => (
         <Space>
           <Button
@@ -297,43 +386,47 @@ function ProductList() {
         </Col>
       </Row>
 
-      <Space style={{ marginBottom: 16 }}>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleOpenProductModal}
-        >
-          New Product
-        </Button>
+      <Card style={{ marginBottom: 24 }}>
+        <Space wrap>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleOpenProductModal}
+          >
+            New Product
+          </Button>
 
-        <Button icon={<FileExcelOutlined />} onClick={exportToExcel}>
-          Export Excel
-        </Button>
+          <Button icon={<FileExcelOutlined />} onClick={exportToExcel}>
+            Export Excel
+          </Button>
 
-        <Button icon={<FilePdfOutlined />} onClick={exportToPDF}>
-          Export PDF
-        </Button>
-      </Space>
+          <Button icon={<FilePdfOutlined />} onClick={exportToPDF}>
+            Export PDF
+          </Button>
+        </Space>
+      </Card>
 
-      <Spin spinning={loading}>
-        <Table
-          columns={columns}
-          dataSource={products}
-          rowKey="id"
-          pagination={{ pageSize: 15 }}
-          scroll={{ x: 1000 }}
-        />
-      </Spin>
+      <Card>
+        <Spin spinning={loading}>
+          <Table
+            columns={columns}
+            dataSource={products}
+            rowKey="id"
+            pagination={{ pageSize: 15 }}
+            scroll={{ x: 1000 }}
+            bordered
+          />
+        </Spin>
+      </Card>
 
-      <Modal
+      <Drawer
         title={editingProduct ? '📦 Edit Product' : '📦 Add New Product'}
         open={modalOpen}
-        onCancel={() => {
+        onClose={() => {
           setModalOpen(false);
           setEditingProduct(null);
           form.resetFields();
         }}
-        footer={null}
         width={700}
         bodyStyle={{ paddingBottom: 80 }}
       >
@@ -343,7 +436,10 @@ function ProductList() {
               <Form.Item
                 name="name"
                 label="Product Name"
-                rules={[{ required: true, message: "Required" }]}
+                rules={[
+                  { required: true, message: "Product name is required" },
+                  { whitespace: true, message: "Product name cannot be empty spaces" },
+                ]}
               >
                 <Input placeholder="e.g.: A4 Paper" size="large" />
               </Form.Item>
@@ -352,9 +448,48 @@ function ProductList() {
               <Form.Item
                 name="product_type"
                 label="Type"
-                rules={[{ required: true, message: "Required" }]}
+                rules={[
+                  { required: true, message: "Type is required" },
+                  { whitespace: true, message: "Type cannot be empty spaces" },
+                ]}
               >
-                <Input placeholder="e.g.: Paper" size="large" />
+                <Select
+                  size="large"
+                  placeholder="Select paper type"
+                  options={PAPER_TYPE_OPTIONS.map((value) => ({
+                    label: value,
+                    value,
+                  }))}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="size"
+                label="Size"
+                rules={[{ required: true, message: "Size is required" }]}
+              >
+                <Select
+                  size="large"
+                  placeholder="Select size"
+                  options={SIZE_OPTIONS.map((value) => ({ label: value, value }))}
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="gram"
+                label="Gram"
+                rules={[{ required: true, message: "Gram is required" }]}
+              >
+                <Select
+                  size="large"
+                  placeholder="Select gram"
+                  options={GRAM_OPTIONS.map((value) => ({ label: value, value }))}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -364,14 +499,23 @@ function ProductList() {
               <Form.Item
                 name="unit_type"
                 label="Unit"
-                rules={[{ required: true, message: "Required" }]}
+                rules={[{ required: true, message: "Unit is required" }]}
               >
-                <Input placeholder="e.g.: Pack" size="large" />
+                <Select
+                  size="large"
+                  placeholder="Select unit"
+                  options={UNIT_OPTIONS.map((value) => ({ label: value, value }))}
+                />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="sheets_per_pack" label="Sheets Per Pack">
-                <InputNumber min={0} size="large" style={{ width: "100%" }} />
+                <InputNumber
+                  min={0}
+                  disabled
+                  size="large"
+                  style={{ width: "100%" }}
+                />
               </Form.Item>
             </Col>
           </Row>
@@ -381,7 +525,7 @@ function ProductList() {
               <Form.Item
                 name="cost_price"
                 label="Cost Price"
-                rules={[{ required: true }]}
+                rules={[{ required: true, message: "Cost price is required" }]}
               >
                 <InputNumber
                   min={0}
@@ -395,7 +539,7 @@ function ProductList() {
               <Form.Item
                 name="sale_price"
                 label="Sale Price"
-                rules={[{ required: true }]}
+                rules={[{ required: true, message: "Sale price is required" }]}
               >
                 <InputNumber
                   min={0}
@@ -412,7 +556,7 @@ function ProductList() {
               <Form.Item
                 name="current_stock"
                 label="Current Stock"
-                rules={[{ required: true }]}
+                rules={[{ required: true, message: "Current stock is required" }]}
               >
                 <InputNumber min={0} size="large" style={{ width: "100%" }} />
               </Form.Item>
@@ -448,7 +592,7 @@ function ProductList() {
             </Button>
           </Space>
         </Form>
-      </Modal>
+      </Drawer>
 
       <Drawer
         title="📊 Update Stock"

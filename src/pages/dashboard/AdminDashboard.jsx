@@ -1,12 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Row, Col, Card, Statistic, Table, Typography, message, Spin, Space, Button } from 'antd';
-import { ArrowUpOutlined, ShoppingOutlined, UserOutlined, WarningOutlined } from '@ant-design/icons';
+import { Row, Col, Card, Statistic, Table, Typography, message, Spin, theme } from 'antd';
+import { WarningOutlined } from '@ant-design/icons';
 import api from '../../api/axiosConfig';
 
 function AdminDashboard() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
-  const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
+  const {
+    token: { colorBgContainer, colorError, colorErrorBg, colorTextSecondary },
+  } = theme.useToken();
 
   useEffect(() => {
     async function loadSummary() {
@@ -27,66 +29,45 @@ function AdminDashboard() {
     {
       title: 'Total Sales',
       value: summary.total_sales || 0,
-      icon: <ShoppingOutlined />,
       color: '#1890ff',
-      bgColor: '#e6f7ff'
     },
     {
       title: 'Total Customers',
       value: summary.total_customers || 0,
-      icon: <UserOutlined />,
       color: '#52c41a',
-      bgColor: '#f6ffed'
     },
     {
       title: 'Current Stock',
       value: summary.total_stock || 0,
-      icon: <ShoppingOutlined />,
       color: '#faad14',
-      bgColor: '#fffbe6'
     },
     {
       title: 'Pending Payments',
       value: summary.total_pending_payments || 0,
-      icon: <ArrowUpOutlined />,
       color: '#ff4d4f',
-      bgColor: '#fff2e8'
     }
   ] : [];
 
   return (
     <Spin spinning={loading}>
       <div>
-        <div style={{ marginBottom: 32 }}>
+        <div style={{ marginBottom: 24 }}>
           <Typography.Title level={2}>Dashboard</Typography.Title>
-          <Typography.Text type="secondary" style={{ color: isDarkMode ? '#cbd5e1' : undefined }}>
+          <Typography.Text type="secondary" style={{ color: colorTextSecondary }}>
             Your Business Analytics Dashboard
           </Typography.Text>
         </div>
 
         {/* Statistics Cards */}
-        <Row gutter={[16, 16]} style={{ marginBottom: 32 }}>
+        <Row gutter={16} style={{ marginBottom: 24 }}>
           {stats.map((stat, index) => (
             <Col xs={24} sm={12} md={6} key={index}>
-              <Card
-                style={{
-                  background: isDarkMode ? '#111827' : stat.bgColor,
-                  border: 'none',
-                  borderRadius: '8px',
-                  color: isDarkMode ? '#e2e8f0' : undefined,
-                }}
-                hoverable
-              >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Statistic
-                    title={stat.title}
-                    value={stat.value}
-                    valueStyle={{ color: stat.color, fontWeight: 'bold' }}
-                  />
-                  <div style={{ fontSize: 32, color: stat.color, opacity: 0.3 }}>
-                    {stat.icon}
-                  </div>
-                </div>
+              <Card>
+                <Statistic
+                  title={stat.title}
+                  value={stat.value}
+                  valueStyle={{ color: stat.color }}
+                />
               </Card>
             </Col>
           ))}
@@ -97,17 +78,16 @@ function AdminDashboard() {
           <Card
             style={{
               marginBottom: 24,
-              background: isDarkMode ? '#111827' : '#fff2f0',
-              borderLeft: `4px solid ${isDarkMode ? '#fb7185' : '#ff4d4f'}`,
-              color: isDarkMode ? '#e2e8f0' : undefined,
+              background: colorErrorBg,
+              borderLeft: `4px solid ${colorError}`,
             }}
           >
             <Row>
               <Col span={2} style={{ fontSize: 24 }}>
-                <WarningOutlined style={{ color: '#ff4d4f' }} />
+                <WarningOutlined style={{ color: colorError }} />
               </Col>
               <Col span={22}>
-                <Typography.Text strong style={{ color: '#ff4d4f' }}>
+                <Typography.Text strong style={{ color: colorError }}>
                   {summary.low_stock_alerts} products have low stock
                 </Typography.Text>
               </Col>
@@ -116,9 +96,8 @@ function AdminDashboard() {
         )}
 
         {/* Quick Summary Table */}
-        <Card title="📋 Quick Summary" style={{ borderRadius: '8px', background: isDarkMode ? '#111827' : undefined }}>
+        <Card title="Quick Summary" style={{ background: colorBgContainer }}>
           <Table
-            style={{ background: isDarkMode ? '#0f172a' : undefined }}
             columns={[
               { title: 'Metric', dataIndex: 'label', key: 'label', width: '50%' },
               {

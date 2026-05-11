@@ -1,5 +1,5 @@
-import { Layout, theme, Button, Dropdown, Space, ConfigProvider } from "antd";
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Layout, theme, Button, Dropdown, Space, ConfigProvider, Modal } from "antd";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 import {
   BgColorsOutlined,
@@ -8,6 +8,8 @@ import {
   MoonOutlined,
 } from "@ant-design/icons";
 import { useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+import { logout } from "../../store/authSlice";
 import Sidebar from "./Sidebar";
 import AdminDashboard from "../../pages/dashboard/AdminDashboard";
 import CustomerList from "../../pages/customers/CustomerList";
@@ -19,13 +21,16 @@ import Reports from "../../pages/reports/Reports";
 import LedgerView from "../../pages/ledger/LedgerView";
 import CustomerSalesPage from "../../pages/sales/CustomerSalesPage";
 
-const { Header, Content, Sider } = Layout;
+const { Header, Content, Sider, Footer } = Layout;
 
 function DashboardLayout() {
   const [darkMode, setDarkMode] = useState(
     localStorage.getItem("papertech_darkMode") === "true",
   );
+  const [logoutModalOpen, setLogoutModalOpen] = useState(false);
   const { user } = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const {
     token: { colorBgContainer, colorText, colorPrimaryBorder, colorBorder },
@@ -45,6 +50,12 @@ function DashboardLayout() {
     const newMode = !darkMode;
     setDarkMode(newMode);
     localStorage.setItem("papertech_darkMode", newMode);
+  };
+
+  const confirmLogout = () => {
+    dispatch(logout());
+    setLogoutModalOpen(false);
+    navigate("/login");
   };
 
   const userMenuItems = [
@@ -97,26 +108,23 @@ function DashboardLayout() {
         >
           <div
             style={{
-              height: 80,
+              height: 64,
               background: darkMode ? "#0f172a" : "#5b52d9",
               display: "flex",
               alignItems: "center",
-              justifyContent: "flex-start",
+              justifyContent: "center",
               fontWeight: 700,
               color: "#fff",
               fontSize: 18,
-              flexDirection: "row",
-              gap: 12,
-              padding: "0 20px",
+              padding: "0 16px",
               boxShadow: darkMode
                 ? "0 2px 8px rgba(0,0,0,0.45)"
                 : "0 2px 8px rgba(0,0,0,0.15)",
             }}
           >
-            <div style={{ fontSize: 28 }}>📄</div>
             <div style={{ letterSpacing: "1px" }}>PAPERTECH</div>
           </div>
-          <Sidebar darkMode={darkMode} />
+          <Sidebar darkMode={darkMode} onLogoutRequest={() => setLogoutModalOpen(true)} />
         </Sider>
         <Layout>
           <Header
@@ -151,7 +159,16 @@ function DashboardLayout() {
               >
                 {darkMode ? "Light" : "Dark"}
               </Button>
-              <Dropdown menu={{ items: userMenuItems }}>
+              <Dropdown
+                menu={{
+                  items: userMenuItems,
+                  onClick: ({ key }) => {
+                    if (key === "logout") {
+                      setLogoutModalOpen(true);
+                    }
+                  },
+                }}
+              >
                 <Button
                   icon={<UserOutlined />}
                   type="text"
@@ -200,8 +217,29 @@ function DashboardLayout() {
               </Routes>
             </div>
           </Content>
+          <Footer
+            style={{
+              textAlign: "center",
+              color: darkMode ? "#cbd5e1" : "#64748b",
+              background: darkMode ? "#0f172a" : "#f8fafc",
+            }}
+          >
+            © {new Date().getFullYear()} PAPERTECH. All rights reserved.
+          </Footer>
         </Layout>
       </Layout>
+      <Modal
+        title="Confirm Logout"
+        open={logoutModalOpen}
+        centered
+        okText="Logout"
+        cancelText="Cancel"
+        okButtonProps={{ danger: true }}
+        onOk={confirmLogout}
+        onCancel={() => setLogoutModalOpen(false)}
+      >
+        Are you sure you want to logout?
+      </Modal>
     </ConfigProvider>
   );
 }

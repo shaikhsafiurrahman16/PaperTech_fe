@@ -4,7 +4,7 @@ import { Card, Typography, Table, Button, Space, message, Spin, Descriptions } f
 import { ArrowLeftOutlined, DownloadOutlined, PrinterOutlined } from "@ant-design/icons";
 import api from "../../api/axiosConfig";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 const formatMoney = (value) => `Rs. ${Number(value ?? 0).toFixed(2)}`;
 
@@ -52,7 +52,7 @@ function InvoiceDetails() {
       `Rs. ${Number(item.subtotal).toFixed(2)}`,
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [["Product", "Qty", "Unit Price", "Subtotal"]],
       body: tableData,
       startY: 58,

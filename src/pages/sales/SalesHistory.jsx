@@ -24,11 +24,14 @@ import {
   PlusOutlined,
   FileExcelOutlined,
   FilePdfOutlined,
+  EyeOutlined,
+  EditOutlined,
+  DeleteOutlined,
 } from "@ant-design/icons";
 import api from "../../api/axiosConfig";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 
 const formatMoney = (value) => `Rs. ${Number(value ?? 0).toFixed(2)}`;
 
@@ -133,6 +136,12 @@ function SalesHistory() {
         ...values,
         discount: Number(values.discount || 0),
         payment_received: Number(values.payment_received || 0),
+        items: (values.items || []).map((item) => ({
+          ...item,
+          product_id: Number(item.product_id),
+          quantity: Number(item.quantity || 0),
+          unit_price: Number(item.unit_price || 0),
+        })),
       };
 
       if (editingSale) {
@@ -216,7 +225,7 @@ function SalesHistory() {
       new Date(sale.created_at).toLocaleDateString("en-US"),
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [
         [
           "Invoice",
@@ -291,32 +300,43 @@ function SalesHistory() {
       ),
     },
     {
-      title: "Actions",
-      key: "invoice_action",
-      render: (_, record) => (
-        <Space>
-          <Button type="link" onClick={() => handleInvoiceView(record.id)}>
-            View
-          </Button>
-          <Button type="link" onClick={() => handleEditSale(record.id)}>
-            Edit
-          </Button>
-          <Button
-            type="link"
-            danger
-            loading={deleteLoading}
-            onClick={() => handleDeleteSale(record.id)}
-          >
-            Delete
-          </Button>
-        </Space>
-      ),
-    },
-    {
       title: "Date",
       dataIndex: "created_at",
       key: "created_at",
       render: (text) => new Date(text).toLocaleDateString("en-US"),
+    },
+    {
+      title: "Action",
+      key: "action",
+      width: 120,
+      fixed: "right",
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="text"
+            icon={<EyeOutlined />}
+            size="small"
+            onClick={() => handleInvoiceView(record.id)}
+            title="View Invoice"
+          />
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            size="small"
+            onClick={() => handleEditSale(record.id)}
+            title="Edit Sale"
+          />
+          <Button
+            type="text"
+            danger
+            icon={<DeleteOutlined />}
+            size="small"
+            loading={deleteLoading}
+            onClick={() => handleDeleteSale(record.id)}
+            title="Delete Sale"
+          />
+        </Space>
+      ),
     },
   ];
 
@@ -588,13 +608,13 @@ function SalesHistory() {
                                 (p) => p.id === value,
                               );
                               if (selected) {
-                                const currentItems = form.getFieldValue("items") || [];
-                                const updatedItems = currentItems.map((item, idx) =>
-                                  idx === field.name
-                                    ? { ...item, unit_price: Number(selected.sale_price) }
-                                    : item,
+                                form.setFieldValue(
+                                  ["items", field.name, "unit_price"],
+                                  Number(selected.sale_price || 0),
                                 );
-                                form.setFieldsValue({ items: updatedItems });
+                                form.validateFields([
+                                  ["items", field.name, "unit_price"],
+                                ]);
                               }
                             }}
                           />

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Drawer, Form, Select, InputNumber, Input, message, Typography, Card, Row, Col, Statistic, Space, Spin } from 'antd';
-import { PlusOutlined, FileExcelOutlined, FilePdfOutlined } from '@ant-design/icons';
+import { Table, Button, Drawer, Form, Select, InputNumber, Input, message, Typography, Card, Row, Col, Statistic, Space, Spin, Popconfirm } from 'antd';
+import { PlusOutlined, FileExcelOutlined, FilePdfOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import api from '../../api/axiosConfig';
 
 const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
@@ -12,6 +12,7 @@ function PaymentList() {
   const [payments, setPayments] = useState([]);
   const [customers, setCustomers] = useState([]);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [editingPayment, setEditingPayment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
   const [form] = Form.useForm();
@@ -39,9 +40,19 @@ function PaymentList() {
   const onFinish = async values => {
     try {
       setLoading(true);
-      await api.post('/payments', values);
-      message.success('Payment saved successfully');
+      const payload = {
+        ...values,
+        amount: Number(values.amount || 0),
+      };
+      if (editingPayment) {
+        await api.put(`/payments/${editingPayment.id}`, payload);
+        message.success('Payment updated successfully');
+      } else {
+        await api.post('/payments', payload);
+        message.success('Payment saved successfully');
+      }
       setDrawerOpen(false);
+      setEditingPayment(null);
       form.resetFields();
       fetchData();
     } catch (error) {
@@ -80,7 +91,7 @@ function PaymentList() {
 
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text('📄 PAPERTECH - Payments Report', 14, 20);
+    doc.text('PAPERTECH - Payments Report', 14, 20);
 
     doc.setFontSize(10);
     doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 14, 28);
@@ -88,9 +99,11 @@ function PaymentList() {
     const tableData = payments.map(p => [
       p.shop_name,
       formatMoney(p.amount),
+      p.payment_method,
+      new Date(p.created_at).toLocaleDateString('en-US'),
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [['Customer', 'Amount', 'Method', 'Date']],
       body: tableData,
       startY: 35,
@@ -130,9 +143,57 @@ function PaymentList() {
       key: 'created_at',
       render: (text) => new Date(text).toLocaleDateString('en-US')
     },
+    {
+      title: 'Action',
+      key: 'action',
+      width: 96,
+      fixed: 'right',
+      render: (_, record) => (
+        <Space>
+          <Button
+            type="text"
+            icon={<EditOutlined />}
+            size="small"
+            title="Edit Payment"
+            onClick={() => {
+              setEditingPayment(record);
+              form.setFieldsValue({
+                customer_id: record.customer_id,
+                amount: Number(record.amount || 0),
+                payment_method: record.payment_method || 'cash',
+                notes: record.notes,
+              });
+              setDrawerOpen(true);
+            }}
+          />
+          <Popconfirm
+            title="Delete this payment?"
+            okText="Delete"
+            cancelText="Cancel"
+            onConfirm={async () => {
+              try {
+                await api.delete(`/payments/${record.id}`);
+                message.success('Payment deleted successfully');
+                fetchData();
+              } catch (error) {
+                message.error(error.response?.data?.message || 'Failed to delete payment');
+              }
+            }}
+          >
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              size="small"
+              title="Delete Payment"
+            />
+          </Popconfirm>
+        </Space>
+      ),
+    },
   ];
 
-  const totalPayments = payments.reduce((sum, p) => sum + (p.amount || 0), 0);
+  const totalPayments = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
 
   return (
     <div>
@@ -179,7 +240,11 @@ function PaymentList() {
           <Button
             type="primary"
             icon={<PlusOutlined />}
-            onClick={() => setDrawerOpen(true)}
+            onClick={() => {
+              setEditingPayment(null);
+              form.resetFields();
+              setDrawerOpen(true);
+            }}
           >
             Record New Payment
           </Button>
@@ -216,10 +281,14 @@ function PaymentList() {
 
       {/* New Payment Drawer */}
       <Drawer
-        title="💰 Record New Payment"
+        title={editingPayment ? 'Edit Payment' : 'Record New Payment'}
         open={drawerOpen}
         width={450}
-        onClose={() => setDrawerOpen(false)}
+        onClose={() => {
+          setDrawerOpen(false);
+          setEditingPayment(null);
+          form.resetFields();
+        }}
         bodyStyle={{ paddingBottom: 80 }}
       >
         <Form
@@ -285,6 +354,7 @@ function PaymentList() {
             <Button
               onClick={() => {
                 setDrawerOpen(false);
+                setEditingPayment(null);
                 form.resetFields();
               }}
               size="large"
@@ -297,7 +367,7 @@ function PaymentList() {
               loading={loading}
               size="large"
             >
-              Record Payment
+              {editingPayment ? 'Update Payment' : 'Record Payment'}
             </Button>
           </Space>
         </Form>

@@ -3,7 +3,7 @@ import { Row, Col, Card, Table, Typography, message, Statistic, Spin, Tag, Space
 import { FileExcelOutlined, FilePdfOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import api from '../../api/axiosConfig';
 
 const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
@@ -78,7 +78,7 @@ function Reports() {
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text('📊 PAPERTECH - Complete Report', 14, 20);
+    doc.text('PAPERTECH - Complete Report', 14, 20);
 
     doc.setFontSize(10);
     doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 14, 28);
@@ -97,7 +97,7 @@ function Reports() {
       ['Pending Payments', summary.total_pending_payments || 0],
     ];
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [['Metric', 'Value']],
       body: summaryData,
       startY: yPosition,
@@ -118,7 +118,7 @@ function Reports() {
     ]);
 
     if (lowStockData.length > 0) {
-      doc.autoTable({
+      autoTable(doc, {
         head: [['Product', 'Current Stock', 'Alert Level']],
         body: lowStockData,
         startY: yPosition,

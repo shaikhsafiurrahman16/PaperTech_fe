@@ -26,7 +26,7 @@ import {
 } from "@ant-design/icons";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
-import "jspdf-autotable";
+import autoTable from "jspdf-autotable";
 import api from "../../api/axiosConfig";
 
 const formatMoney = (value) => `Rs. ${Number(value ?? 0).toFixed(2)}`;
@@ -70,7 +70,7 @@ function CustomerList() {
       phone: customer.phone,
       address: customer.address,
       cnic: customer.cnic,
-      credit_limit: customer.credit_limit,
+      credit_limit: Number(customer.credit_limit || 0),
       username: customer.username,
     });
   };
@@ -81,28 +81,24 @@ function CustomerList() {
       message.success("Customer deleted successfully");
       fetchCustomers();
     } catch (error) {
-      message.error("Failed to delete customer");
+      message.error(error.response?.data?.message || "Failed to delete customer");
     }
   };
 
   const onFinish = async (values) => {
     try {
       setLoading(true);
+      const payload = {
+        ...values,
+        credit_limit: Number(values.credit_limit || 0),
+      };
 
       if (editingCustomer) {
-        await api.put(`/customers/${editingCustomer.id}`, values);
+        await api.put(`/customers/${editingCustomer.id}`, payload);
         message.success("Customer updated successfully");
       } else {
-        await api.post("/customers", values);
-
-        await api.post("/auth/register", {
-          full_name: values.full_name,
-          username: values.username,
-          password: values.password,
-          role: "customer",
-        });
-
-        message.success("Customer created & registered successfully");
+        await api.post("/customers", payload);
+        message.success("Customer created successfully");
       }
 
       setDrawerOpen(false);
@@ -168,7 +164,7 @@ function CustomerList() {
       c.customer_type === "star" ? "Star" : "Local",
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [
         ["Shop Name", "Full Name", "Phone", "Credit Limit", "Balance", "Type"],
       ],
@@ -241,12 +237,16 @@ function CustomerList() {
     {
       title: "Action",
       key: "action",
+      width: 96,
+      fixed: "right",
       render: (_, record) => (
         <Space>
           <Button
             type="text"
             icon={<EditOutlined />}
+            size="small"
             onClick={() => handleEditCustomer(record)}
+            title="Edit Customer"
           />
           <Popconfirm
             title="Are you sure you want to delete this customer?"
@@ -254,7 +254,13 @@ function CustomerList() {
             okText="Delete"
             cancelText="Cancel"
           >
-            <Button type="text" danger icon={<DeleteOutlined />} />
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              size="small"
+              title="Delete Customer"
+            />
           </Popconfirm>
         </Space>
       ),
@@ -265,11 +271,11 @@ function CustomerList() {
     (c) => c.customer_type === "star",
   ).length;
   const totalCredit = customers.reduce(
-    (sum, c) => sum + (c.credit_limit || 0),
+    (sum, c) => sum + Number(c.credit_limit || 0),
     0,
   );
   const totalBalance = customers.reduce(
-    (sum, c) => sum + (c.current_balance || 0),
+    (sum, c) => sum + Number(c.current_balance || 0),
     0,
   );
 
@@ -302,7 +308,7 @@ function CustomerList() {
         <Col xs={24} sm={12} md={6}>
           <Card>
             <Statistic
-              title="Total Credit"
+              title="Total Credit Limit"
               value={totalCredit}
               prefix="Rs. "
               valueStyle={{ color: "#52c41a" }}
@@ -374,7 +380,10 @@ function CustomerList() {
           <Form.Item
             name="full_name"
             label="Owner Full Name"
-            rules={[{ required: true, message: "Name is required" }]}
+            rules={[
+              { required: true, message: "Name is required" },
+              { whitespace: true, message: "Name cannot be empty spaces" },
+            ]}
           >
             <Input placeholder="e.g.: Ahmad Ali" size="large" />
           </Form.Item>
@@ -382,7 +391,10 @@ function CustomerList() {
           <Form.Item
             name="shop_name"
             label="Shop Name"
-            rules={[{ required: true, message: "Shop name is required" }]}
+            rules={[
+              { required: true, message: "Shop name is required" },
+              { whitespace: true, message: "Shop name cannot be empty spaces" },
+            ]}
           >
             <Input placeholder="e.g.: Ahmad Paper House" size="large" />
           </Form.Item>
@@ -390,17 +402,32 @@ function CustomerList() {
           <Form.Item
             name="phone"
             label="Phone Number"
-            rules={[{ required: true, message: "Phone is required" }]}
+            rules={[
+              { required: true, message: "Phone is required" },
+              {
+                pattern: /^\d{1,11}$/,
+                message: "Phone number must be digits only and maximum 11 digits",
+              },
+            ]}
           >
-            <Input placeholder="e.g.: 03001234567" size="large" />
+            <Input maxLength={11} placeholder="e.g.: 03001234567" size="large" />
           </Form.Item>
 
           <Form.Item name="address" label="Address">
             <Input.TextArea rows={2} placeholder="Enter full shop address" />
           </Form.Item>
 
-          <Form.Item name="cnic" label="CNIC">
-            <Input placeholder="e.g.: 12345-1234567-1" />
+          <Form.Item
+            name="cnic"
+            label="CNIC"
+            rules={[
+              {
+                pattern: /^\d{1,13}$/,
+                message: "CNIC must be digits only and maximum 13 digits",
+              },
+            ]}
+          >
+            <Input maxLength={13} placeholder="e.g.: 1234512345671" />
           </Form.Item>
 
           <Form.Item
@@ -423,7 +450,13 @@ function CustomerList() {
               <Form.Item
                 name="username"
                 label="Username (for Login)"
-                rules={[{ required: true, message: "Username is required" }]}
+                rules={[
+                  { required: true, message: "Username is required" },
+                  {
+                    pattern: /^\S+$/,
+                    message: "Username cannot contain spaces",
+                  },
+                ]}
               >
                 <Input placeholder="e.g.: ahmad_shop" size="large" />
               </Form.Item>

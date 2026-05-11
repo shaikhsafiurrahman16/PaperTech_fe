@@ -3,7 +3,7 @@ import { Table, Button, Space, message, Row, Col, Card, Statistic, Spin, Empty, 
 import { FileExcelOutlined, FilePdfOutlined, PrinterOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import api from '../../api/axiosConfig';
 import { useSelector } from 'react-redux';
 
@@ -80,7 +80,7 @@ function CustomerSalesPage() {
     
     // Header
     doc.setFontSize(18);
-    doc.text('📄 PAPERTECH - Sales Report', 14, 20);
+    doc.text('PAPERTECH - Sales Report', 14, 20);
     
     doc.setFontSize(10);
     doc.text(`Customer: ${user?.full_name || user?.username}`, 14, 28);
@@ -97,7 +97,7 @@ function CustomerSalesPage() {
       new Date(sale.created_at).toLocaleDateString('en-US'),
     ]);
 
-    doc.autoTable({
+    autoTable(doc, {
       head: [['Invoice', 'Total', 'Discount', 'Grand Total', 'Paid', 'Balance', 'Type', 'Date']],
       body: tableData,
       startY: 42,
@@ -190,9 +190,9 @@ function CustomerSalesPage() {
     },
   ];
 
-  const totalSalesAmount = sales.reduce((sum, s) => sum + (s.grand_total || 0), 0);
-  const totalPaid = sales.reduce((sum, s) => sum + (s.payment_received || 0), 0);
-  const totalBalance = sales.reduce((sum, s) => sum + (s.remaining_balance || 0), 0);
+  const totalSalesAmount = sales.reduce((sum, s) => sum + Number(s.grand_total || 0), 0);
+  const totalPaid = sales.reduce((sum, s) => sum + Number(s.payment_received || 0), 0);
+  const totalBalance = sales.reduce((sum, s) => sum + Number(s.remaining_balance || 0), 0);
 
   return (
     <div style={{ paddingBottom: 32 }}>
