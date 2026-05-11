@@ -6,6 +6,7 @@ import api from '../../api/axiosConfig';
 function AdminDashboard() {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
+  const isDarkMode = document.documentElement.getAttribute('data-theme') === 'dark';
 
   useEffect(() => {
     async function loadSummary() {
@@ -57,8 +58,8 @@ function AdminDashboard() {
     <Spin spinning={loading}>
       <div>
         <div style={{ marginBottom: 32 }}>
-          <Typography.Title level={2}>📊 Dashboard</Typography.Title>
-          <Typography.Text type="secondary">
+          <Typography.Title level={2}>Dashboard</Typography.Title>
+          <Typography.Text type="secondary" style={{ color: isDarkMode ? '#cbd5e1' : undefined }}>
             Your Business Analytics Dashboard
           </Typography.Text>
         </div>
@@ -69,15 +70,16 @@ function AdminDashboard() {
             <Col xs={24} sm={12} md={6} key={index}>
               <Card
                 style={{
-                  background: stat.bgColor,
+                  background: isDarkMode ? '#111827' : stat.bgColor,
                   border: 'none',
-                  borderRadius: '8px'
+                  borderRadius: '8px',
+                  color: isDarkMode ? '#e2e8f0' : undefined,
                 }}
                 hoverable
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <Statistic 
-                    title={stat.title} 
+                  <Statistic
+                    title={stat.title}
                     value={stat.value}
                     valueStyle={{ color: stat.color, fontWeight: 'bold' }}
                   />
@@ -95,8 +97,9 @@ function AdminDashboard() {
           <Card
             style={{
               marginBottom: 24,
-              background: '#fff2f0',
-              borderLeft: '4px solid #ff4d4f'
+              background: isDarkMode ? '#111827' : '#fff2f0',
+              borderLeft: `4px solid ${isDarkMode ? '#fb7185' : '#ff4d4f'}`,
+              color: isDarkMode ? '#e2e8f0' : undefined,
             }}
           >
             <Row>
@@ -113,13 +116,14 @@ function AdminDashboard() {
         )}
 
         {/* Quick Summary Table */}
-        <Card title="📋 Quick Summary" style={{ borderRadius: '8px' }}>
+        <Card title="📋 Quick Summary" style={{ borderRadius: '8px', background: isDarkMode ? '#111827' : undefined }}>
           <Table
+            style={{ background: isDarkMode ? '#0f172a' : undefined }}
             columns={[
               { title: 'Metric', dataIndex: 'label', key: 'label', width: '50%' },
-              { 
-                title: 'Value', 
-                dataIndex: 'value', 
+              {
+                title: 'Value',
+                dataIndex: 'value',
                 key: 'value',
                 render: (text) => <strong>{text}</strong>
               },

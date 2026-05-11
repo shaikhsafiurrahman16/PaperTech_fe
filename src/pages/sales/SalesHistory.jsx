@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Table,
   Button,
@@ -45,6 +45,7 @@ function SalesHistory() {
   const [dateRange, setDateRange] = useState([]);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [form] = Form.useForm();
+  const location = useLocation();
   const navigate = useNavigate();
 
   const fetchData = async (filters = {}) => {
@@ -356,7 +357,7 @@ function SalesHistory() {
     <div>
       <div style={{ marginBottom: 24 }}>
         <Typography.Title level={2}>
-          📊 Sales & Invoice Management
+          Sales & Invoice Management
         </Typography.Title>
       </div>
 
@@ -447,13 +448,15 @@ function SalesHistory() {
       {/* Action Buttons */}
       <Card style={{ marginBottom: 24 }}>
         <Space wrap>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleOpenSaleDrawer}
-          >
-            Create Sale
-          </Button>
+          {!location.pathname.startsWith("/invoices") && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleOpenSaleDrawer}
+            >
+              Create Sale
+            </Button>
+          )}
           <Button
             icon={<FileExcelOutlined />}
             onClick={exportToExcel}
@@ -585,12 +588,13 @@ function SalesHistory() {
                                 (p) => p.id === value,
                               );
                               if (selected) {
-                                form.setFields([
-                                  {
-                                    name: ["items", field.name, "unit_price"],
-                                    value: selected.sale_price,
-                                  },
-                                ]);
+                                const currentItems = form.getFieldValue("items") || [];
+                                const updatedItems = currentItems.map((item, idx) =>
+                                  idx === field.name
+                                    ? { ...item, unit_price: Number(selected.sale_price) }
+                                    : item,
+                                );
+                                form.setFieldsValue({ items: updatedItems });
                               }
                             }}
                           />

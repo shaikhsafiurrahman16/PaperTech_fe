@@ -20,7 +20,7 @@ function PaymentList() {
     try {
       setPageLoading(true);
       const [paymentsRes, customersRes] = await Promise.all([
-        api.get('/payments'), 
+        api.get('/payments'),
         api.get('/customers')
       ]);
       setPayments(paymentsRes.data.data || []);
@@ -81,10 +81,10 @@ function PaymentList() {
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text('📄 PAPERTECH - Payments Report', 14, 20);
-    
+
     doc.setFontSize(10);
     doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 14, 28);
-    
+
     const tableData = payments.map(p => [
       p.shop_name,
       formatMoney(p.amount),
@@ -102,31 +102,31 @@ function PaymentList() {
   };
 
   const columns = [
-    { 
-      title: 'Customer', 
-      dataIndex: 'shop_name', 
+    {
+      title: 'Customer',
+      dataIndex: 'shop_name',
       key: 'shop_name',
       render: (text) => <strong>{text}</strong>
     },
-    { 
-      title: 'Amount', 
-      dataIndex: 'amount', 
+    {
+      title: 'Amount',
+      dataIndex: 'amount',
       key: 'amount',
       render: (text) => <span style={{ color: '#52c41a', fontWeight: 'bold' }}>{formatMoney(text)}</span>
     },
-    { 
-      title: 'Method', 
-      dataIndex: 'payment_method', 
-      key: 'payment_method' 
+    {
+      title: 'Method',
+      dataIndex: 'payment_method',
+      key: 'payment_method'
     },
-    { 
-      title: 'Notes', 
-      dataIndex: 'notes', 
-      key: 'notes' 
+    {
+      title: 'Notes',
+      dataIndex: 'notes',
+      key: 'notes'
     },
-    { 
-      title: 'Date', 
-      dataIndex: 'created_at', 
+    {
+      title: 'Date',
+      dataIndex: 'created_at',
       key: 'created_at',
       render: (text) => new Date(text).toLocaleDateString('en-US')
     },
@@ -137,15 +137,15 @@ function PaymentList() {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <Typography.Title level={2}>💰 Payments</Typography.Title>
+        <Typography.Title level={2}>Payments</Typography.Title>
       </div>
 
       {/* Statistics */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
-            <Statistic 
-              title="Total Payments" 
+            <Statistic
+              title="Total Payments"
               value={payments.length}
               valueStyle={{ color: '#1890ff' }}
             />
@@ -153,8 +153,8 @@ function PaymentList() {
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card>
-            <Statistic 
-              title="Total Amount" 
+            <Statistic
+              title="Total Amount"
               value={totalPayments}
               prefix="Rs. "
               valueStyle={{ color: '#52c41a' }}
@@ -163,8 +163,8 @@ function PaymentList() {
         </Col>
         <Col xs={24} sm={12} md={6}>
           <Card>
-            <Statistic 
-              title="Average Payment" 
+            <Statistic
+              title="Average Payment"
               value={payments.length > 0 ? (totalPayments / payments.length).toFixed(2) : 0}
               prefix="Rs. "
               valueStyle={{ color: '#faad14' }}
@@ -176,22 +176,22 @@ function PaymentList() {
       {/* Action Buttons */}
       <Card style={{ marginBottom: 24 }}>
         <Space wrap>
-          <Button 
-            type="primary" 
+          <Button
+            type="primary"
             icon={<PlusOutlined />}
             onClick={() => setDrawerOpen(true)}
           >
             Record New Payment
           </Button>
-          <Button 
-            icon={<FileExcelOutlined />} 
+          <Button
+            icon={<FileExcelOutlined />}
             onClick={exportToExcel}
             style={{ background: '#10b981', color: '#fff', border: 'none' }}
           >
             Excel Export
           </Button>
-          <Button 
-            icon={<FilePdfOutlined />} 
+          <Button
+            icon={<FilePdfOutlined />}
             danger
             onClick={exportToPDF}
           >
@@ -203,9 +203,9 @@ function PaymentList() {
       {/* Payments Table */}
       <Card>
         <Spin spinning={pageLoading}>
-          <Table 
-            rowKey="id" 
-            columns={columns} 
+          <Table
+            rowKey="id"
+            columns={columns}
             dataSource={payments.map((p, idx) => ({ ...p, key: p.id || idx }))}
             pagination={{ pageSize: 15, showSizeChanger: true }}
             scroll={{ x: 1000 }}
@@ -215,38 +215,38 @@ function PaymentList() {
       </Card>
 
       {/* New Payment Drawer */}
-      <Drawer 
-        title="💰 Record New Payment" 
-        open={drawerOpen} 
+      <Drawer
+        title="💰 Record New Payment"
+        open={drawerOpen}
         width={450}
         onClose={() => setDrawerOpen(false)}
         bodyStyle={{ paddingBottom: 80 }}
       >
-        <Form 
-          layout="vertical" 
-          form={form} 
+        <Form
+          layout="vertical"
+          form={form}
           onFinish={onFinish}
         >
-          <Form.Item 
-            name="customer_id" 
-            label="Select Customer" 
+          <Form.Item
+            name="customer_id"
+            label="Select Customer"
             rules={[{ required: true, message: 'Please select a customer' }]}
-          > 
-            <Select 
+          >
+            <Select
               placeholder="Search by customer name"
-              options={customers.map(c => ({ 
-                label: `${c.shop_name} (${c.full_name})`, 
-                value: c.id 
-              }))} 
+              options={customers.map(c => ({
+                label: `${c.shop_name} (${c.full_name})`,
+                value: c.id
+              }))}
             />
           </Form.Item>
 
-          <Form.Item 
-            name="amount" 
-            label="Amount" 
+          <Form.Item
+            name="amount"
+            label="Amount"
             rules={[{ required: true, type: 'number', min: 1, message: 'Please enter amount' }]}
-          > 
-            <InputNumber 
+          >
+            <InputNumber
               style={{ width: '100%' }}
               size="large"
               prefix="Rs. "
@@ -254,13 +254,13 @@ function PaymentList() {
             />
           </Form.Item>
 
-          <Form.Item 
-            name="payment_method" 
-            label="Payment Method" 
+          <Form.Item
+            name="payment_method"
+            label="Payment Method"
             initialValue="cash"
             rules={[{ required: true }]}
-          > 
-            <Select 
+          >
+            <Select
               options={[
                 { label: 'Cash', value: 'cash' },
                 { label: 'Check', value: 'check' },
@@ -271,18 +271,18 @@ function PaymentList() {
             />
           </Form.Item>
 
-          <Form.Item 
-            name="notes" 
+          <Form.Item
+            name="notes"
             label="Notes"
-          > 
-            <Input.TextArea 
-              rows={3} 
-              placeholder="Add any notes or comments" 
+          >
+            <Input.TextArea
+              rows={3}
+              placeholder="Add any notes or comments"
             />
           </Form.Item>
 
           <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-            <Button 
+            <Button
               onClick={() => {
                 setDrawerOpen(false);
                 form.resetFields();
@@ -291,9 +291,9 @@ function PaymentList() {
             >
               Cancel
             </Button>
-            <Button 
-              type="primary" 
-              htmlType="submit" 
+            <Button
+              type="primary"
+              htmlType="submit"
               loading={loading}
               size="large"
             >

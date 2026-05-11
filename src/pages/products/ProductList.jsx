@@ -256,7 +256,7 @@ function ProductList() {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <Typography.Title level={2}>📦 Products Inventory</Typography.Title>
+        <Typography.Title level={2}>Products Inventory</Typography.Title>
       </div>
 
       <Row gutter={16} style={{ marginBottom: 24 }}>

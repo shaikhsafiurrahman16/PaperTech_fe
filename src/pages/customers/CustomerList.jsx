@@ -276,7 +276,7 @@ function CustomerList() {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <Typography.Title level={2}>👥 Customers Management</Typography.Title>
+        <Typography.Title level={2}>Customers Management</Typography.Title>
       </div>
 
       {/* Statistics */}
