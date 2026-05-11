@@ -149,7 +149,7 @@ function LedgerView() {
 
       {/* Ledger Table */}
       {selectedCustomer && (
-        <Card title="📊 Ledger Entries">
+        <Card title="Ledger Entries">
           <Spin spinning={loading}>
             {ledger.length === 0 ? (
               <Empty description="No ledger entries found" />

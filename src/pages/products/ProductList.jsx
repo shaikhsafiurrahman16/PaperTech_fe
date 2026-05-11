@@ -93,6 +93,7 @@ function ProductList() {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const selectedUnitType = Form.useWatch("unit_type", form);
 
   const fetchProducts = async () => {
@@ -206,7 +207,12 @@ function ProductList() {
   };
 
   const exportToExcel = () => {
-    const data = products.map((p) => ({
+    if (filteredProducts.length === 0) {
+      message.warning("No data available to export");
+      return;
+    }
+
+    const data = filteredProducts.map((p) => ({
       Name: p.name,
       Type: p.product_type,
       Size: p.size,
@@ -226,6 +232,11 @@ function ProductList() {
   };
 
   const exportToPDF = () => {
+    if (filteredProducts.length === 0) {
+      message.warning("No data available to export");
+      return;
+    }
+
     const doc = new jsPDF();
     doc.setFontSize(18);
     doc.text("PAPERTECH", 14, 18);
@@ -233,9 +244,9 @@ function ProductList() {
     doc.text("Products Inventory Report", 14, 26);
     doc.setFontSize(9);
     doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 14, 32);
-    doc.text(`Total Products: ${products.length}`, 140, 26);
+    doc.text(`Total Products: ${filteredProducts.length}`, 140, 26);
 
-    const tableData = products.map((p) => [
+    const tableData = filteredProducts.map((p) => [
       p.name,
       p.product_type,
       p.size || "",
@@ -263,6 +274,14 @@ function ProductList() {
   const lowStockProducts = products.filter(
     (p) => p.current_stock <= p.min_stock_alert,
   );
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredProducts = normalizedSearch
+    ? products.filter((p) =>
+        [p.name, p.product_type, p.size, p.gram, p.unit_type, p.description]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
+      )
+    : products;
 
   const columns = [
     {
@@ -313,30 +332,34 @@ function ProductList() {
       fixed: "right",
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            size="small"
-            onClick={() => handleEditProduct(record)}
-            title="Edit Product"
-          />
-          <Button
-            type="text"
-            icon={<DatabaseOutlined />}
-            size="small"
-            onClick={() => {
-              setSelectedProduct(record);
-              setStockDrawerOpen(true);
-            }}
-            title="Update Stock"
-          />
-          <Button
-            danger
-            type="text"
-            icon={<DeleteOutlined />}
-            size="small"
-            onClick={() => handleDeleteProduct(record.id)}
-          />
+          <Tooltip title="Edit product">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              size="small"
+              onClick={() => handleEditProduct(record)}
+            />
+          </Tooltip>
+          <Tooltip title="Update product stock">
+            <Button
+              type="text"
+              icon={<DatabaseOutlined />}
+              size="small"
+              onClick={() => {
+                setSelectedProduct(record);
+                setStockDrawerOpen(true);
+              }}
+            />
+          </Tooltip>
+          <Tooltip title="Delete product">
+            <Button
+              danger
+              type="text"
+              icon={<DeleteOutlined />}
+              size="small"
+              onClick={() => handleDeleteProduct(record.id)}
+            />
+          </Tooltip>
         </Space>
       ),
     },
@@ -349,7 +372,7 @@ function ProductList() {
       </div>
 
       <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card>
             <Statistic
               title="Total Products"
@@ -358,7 +381,7 @@ function ProductList() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card>
             <Statistic
               title="Low Stock"
@@ -370,7 +393,7 @@ function ProductList() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card>
             <Statistic
               title="Total Stock Value"
@@ -387,30 +410,53 @@ function ProductList() {
       </Row>
 
       <Card style={{ marginBottom: 24 }}>
-        <Space wrap>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleOpenProductModal}
-          >
-            New Product
-          </Button>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          <Input.Search
+            allowClear
+            placeholder="Search products"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ maxWidth: 360, flex: "1 1 280px" }}
+          />
+          <Space wrap style={{ justifyContent: "flex-end" }}>
+            <Tooltip title="Add a new product">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleOpenProductModal}
+              >
+                New Product
+              </Button>
+            </Tooltip>
 
-          <Button icon={<FileExcelOutlined />} onClick={exportToExcel}>
-            Export Excel
-          </Button>
+            <Tooltip title="Export visible products to Excel">
+              <Button icon={<FileExcelOutlined />} onClick={exportToExcel}>
+                Export Excel
+              </Button>
+            </Tooltip>
 
-          <Button icon={<FilePdfOutlined />} onClick={exportToPDF}>
-            Export PDF
-          </Button>
-        </Space>
+            <Tooltip title="Export visible products to PDF">
+              <Button icon={<FilePdfOutlined />} onClick={exportToPDF}>
+                Export PDF
+              </Button>
+            </Tooltip>
+          </Space>
+        </div>
       </Card>
 
       <Card>
         <Spin spinning={loading}>
           <Table
             columns={columns}
-            dataSource={products}
+            dataSource={filteredProducts}
             rowKey="id"
             pagination={{ pageSize: 15 }}
             scroll={{ x: 1000 }}
@@ -420,7 +466,7 @@ function ProductList() {
       </Card>
 
       <Drawer
-        title={editingProduct ? '📦 Edit Product' : '📦 Add New Product'}
+        title={editingProduct ? 'Edit Product' : 'Add New Product'}
         open={modalOpen}
         onClose={() => {
           setModalOpen(false);
@@ -573,29 +619,33 @@ function ProductList() {
           </Form.Item>
 
           <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-            <Button
-              onClick={() => {
-                setModalOpen(false);
-                form.resetFields();
-              }}
-              size="large"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              size="large"
-            >
-              Save
-            </Button>
+            <Tooltip title="Close without saving">
+              <Button
+                onClick={() => {
+                  setModalOpen(false);
+                  form.resetFields();
+                }}
+                size="large"
+              >
+                Cancel
+              </Button>
+            </Tooltip>
+            <Tooltip title="Save product details">
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                size="large"
+              >
+                Save
+              </Button>
+            </Tooltip>
           </Space>
         </Form>
       </Drawer>
 
       <Drawer
-        title="📊 Update Stock"
+        title="Update Stock"
         open={stockDrawerOpen}
         onClose={() => {
           setStockDrawerOpen(false);
@@ -650,17 +700,21 @@ function ProductList() {
               </Card>
 
               <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-                <Button onClick={() => setStockDrawerOpen(false)} size="large">
-                  Cancel
-                </Button>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={loading}
-                  size="large"
-                >
-                  Update
-                </Button>
+                <Tooltip title="Close without updating stock">
+                  <Button onClick={() => setStockDrawerOpen(false)} size="large">
+                    Cancel
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Apply this stock change">
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    loading={loading}
+                    size="large"
+                  >
+                    Update
+                  </Button>
+                </Tooltip>
               </Space>
             </Form>
           </div>

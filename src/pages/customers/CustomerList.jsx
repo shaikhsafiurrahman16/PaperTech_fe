@@ -16,6 +16,7 @@ import {
   Select,
   Space,
   Spin,
+  Tooltip,
 } from "antd";
 import {
   PlusOutlined,
@@ -37,6 +38,7 @@ function CustomerList() {
   const [editingCustomer, setEditingCustomer] = useState(null);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
   const [form] = Form.useForm();
 
   const fetchCustomers = async () => {
@@ -113,12 +115,12 @@ function CustomerList() {
   };
 
   const exportToExcel = () => {
-    if (customers.length === 0) {
+    if (filteredCustomers.length === 0) {
       message.warning("No data available to export");
       return;
     }
 
-    const data = customers.map((c) => ({
+    const data = filteredCustomers.map((c) => ({
       "Shop Name": c.shop_name,
       "Owner Name": c.full_name,
       Phone: c.phone,
@@ -140,7 +142,7 @@ function CustomerList() {
   };
 
   const exportToPDF = () => {
-    if (customers.length === 0) {
+    if (filteredCustomers.length === 0) {
       message.warning("No data available to export");
       return;
     }
@@ -152,10 +154,10 @@ function CustomerList() {
     doc.text("Customers Report", 14, 28);
     doc.setFontSize(9);
     doc.text(`Report Date: ${new Date().toLocaleDateString("en-US")}`, 14, 34);
-    doc.text(`Total Customers: ${customers.length}`, 140, 20);
+    doc.text(`Total Customers: ${filteredCustomers.length}`, 140, 20);
     doc.text(`Total Balance: ${formatMoney(totalBalance)}`, 140, 26);
 
-    const tableData = customers.map((c) => [
+    const tableData = filteredCustomers.map((c) => [
       c.shop_name,
       c.full_name,
       c.phone,
@@ -241,26 +243,28 @@ function CustomerList() {
       fixed: "right",
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            size="small"
-            onClick={() => handleEditCustomer(record)}
-            title="Edit Customer"
-          />
+          <Tooltip title="Edit customer">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              size="small"
+              onClick={() => handleEditCustomer(record)}
+            />
+          </Tooltip>
           <Popconfirm
             title="Are you sure you want to delete this customer?"
             onConfirm={() => handleDeleteCustomer(record.id)}
             okText="Delete"
             cancelText="Cancel"
           >
-            <Button
-              type="text"
-              danger
-              icon={<DeleteOutlined />}
-              size="small"
-              title="Delete Customer"
-            />
+            <Tooltip title="Delete customer">
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                size="small"
+              />
+            </Tooltip>
           </Popconfirm>
         </Space>
       ),
@@ -278,6 +282,14 @@ function CustomerList() {
     (sum, c) => sum + Number(c.current_balance || 0),
     0,
   );
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredCustomers = normalizedSearch
+    ? customers.filter((c) =>
+        [c.shop_name, c.full_name, c.phone, c.username]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
+      )
+    : customers;
 
   return (
     <div>
@@ -327,27 +339,49 @@ function CustomerList() {
         </Col>
       </Row>
 
-      {/* Action Buttons */}
       <Card style={{ marginBottom: 24 }}>
-        <Space wrap>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleCreateCustomer}
-          >
-            Add New Customer
-          </Button>
-          <Button
-            icon={<FileExcelOutlined />}
-            onClick={exportToExcel}
-            style={{ background: "#10b981", color: "#fff", border: "none" }}
-          >
-            Excel Export
-          </Button>
-          <Button icon={<FilePdfOutlined />} danger onClick={exportToPDF}>
-            PDF Export
-          </Button>
-        </Space>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          <Input.Search
+            allowClear
+            placeholder="Search customers"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ maxWidth: 360, flex: "1 1 280px" }}
+          />
+          <Space wrap style={{ justifyContent: "flex-end" }}>
+            <Tooltip title="Add a new customer">
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleCreateCustomer}
+              >
+                Add New Customer
+              </Button>
+            </Tooltip>
+            <Tooltip title="Export visible customers to Excel">
+              <Button
+                icon={<FileExcelOutlined />}
+                onClick={exportToExcel}
+                style={{ background: "#10b981", color: "#fff", border: "none" }}
+              >
+                Excel Export
+              </Button>
+            </Tooltip>
+            <Tooltip title="Export visible customers to PDF">
+              <Button icon={<FilePdfOutlined />} danger onClick={exportToPDF}>
+                PDF Export
+              </Button>
+            </Tooltip>
+          </Space>
+        </div>
       </Card>
 
       {/* Customers Table */}
@@ -356,7 +390,7 @@ function CustomerList() {
           <Table
             rowKey="id"
             columns={columns}
-            dataSource={customers.map((c, idx) => ({ ...c, key: c.id || idx }))}
+            dataSource={filteredCustomers.map((c, idx) => ({ ...c, key: c.id || idx }))}
             pagination={{ pageSize: 15, showSizeChanger: true }}
             scroll={{ x: 1000 }}
             bordered
@@ -480,23 +514,27 @@ function CustomerList() {
           )}
 
           <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-            <Button
-              onClick={() => {
-                setDrawerOpen(false);
-                form.resetFields();
-              }}
-              size="large"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              size="large"
-            >
-              Save
-            </Button>
+            <Tooltip title="Close without saving">
+              <Button
+                onClick={() => {
+                  setDrawerOpen(false);
+                  form.resetFields();
+                }}
+                size="large"
+              >
+                Cancel
+              </Button>
+            </Tooltip>
+            <Tooltip title="Save customer details">
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                size="large"
+              >
+                Save
+              </Button>
+            </Tooltip>
           </Space>
         </Form>
       </Drawer>

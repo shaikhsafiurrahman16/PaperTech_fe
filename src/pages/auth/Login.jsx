@@ -43,7 +43,9 @@ function Login() {
         }),
       );
       message.success("Login Successful");
-      navigate("/dashboard");
+      navigate(response.data.data.role === "customer" ? "/sales" : "/dashboard", {
+        replace: true,
+      });
     } catch (error) {
       console.log(error)
       message.error(error.response?.data?.message || "Login failed");

@@ -12,6 +12,20 @@ import Reports from './pages/reports/Reports';
 import LedgerView from './pages/ledger/LedgerView';
 import DashboardLayout from './components/layout/DashboardLayout';
 
+function getHomePath(user) {
+  return user?.role === 'customer' ? '/sales' : '/dashboard';
+}
+
+function PublicRoute({ children }) {
+  const auth = useSelector(state => state.auth);
+
+  if (auth.token) {
+    return <Navigate to={getHomePath(auth.user)} replace />;
+  }
+
+  return children;
+}
+
 function ProtectedRoute({ children }) {
   const auth = useSelector(state => state.auth);
   const shouldRedirect = !auth.token;
@@ -32,7 +46,14 @@ function ProtectedRoute({ children }) {
 function App() {
   return (
     <Routes>
-      <Route path="/login" element={<Login />} />
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
       <Route
         path="/*"
         element={

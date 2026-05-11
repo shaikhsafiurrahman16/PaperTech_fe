@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Drawer, Form, Select, InputNumber, Input, message, Typography, Card, Row, Col, Statistic, Space, Spin, Popconfirm } from 'antd';
+import { Table, Button, Drawer, Form, Select, InputNumber, Input, message, Typography, Card, Row, Col, Statistic, Space, Spin, Popconfirm, DatePicker, Tooltip } from 'antd';
 import { PlusOutlined, FileExcelOutlined, FilePdfOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -7,6 +7,7 @@ import autoTable from 'jspdf-autotable';
 import api from '../../api/axiosConfig';
 
 const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
+const { RangePicker } = DatePicker;
 
 function PaymentList() {
   const [payments, setPayments] = useState([]);
@@ -15,13 +16,16 @@ function PaymentList() {
   const [editingPayment, setEditingPayment] = useState(null);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
+  const [filters, setFilters] = useState({});
   const [form] = Form.useForm();
+  const [filterForm] = Form.useForm();
 
-  const fetchData = async () => {
+  const fetchData = async (nextFilters = filters) => {
     try {
       setPageLoading(true);
+      const params = { ...nextFilters };
       const [paymentsRes, customersRes] = await Promise.all([
-        api.get('/payments'),
+        api.get('/payments', { params }),
         api.get('/customers')
       ]);
       setPayments(paymentsRes.data.data || []);
@@ -150,22 +154,23 @@ function PaymentList() {
       fixed: 'right',
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            size="small"
-            title="Edit Payment"
-            onClick={() => {
-              setEditingPayment(record);
-              form.setFieldsValue({
-                customer_id: record.customer_id,
-                amount: Number(record.amount || 0),
-                payment_method: record.payment_method || 'cash',
-                notes: record.notes,
-              });
-              setDrawerOpen(true);
-            }}
-          />
+          <Tooltip title="Edit payment">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              size="small"
+              onClick={() => {
+                setEditingPayment(record);
+                form.setFieldsValue({
+                  customer_id: record.customer_id,
+                  amount: Number(record.amount || 0),
+                  payment_method: record.payment_method || 'cash',
+                  notes: record.notes,
+                });
+                setDrawerOpen(true);
+              }}
+            />
+          </Tooltip>
           <Popconfirm
             title="Delete this payment?"
             okText="Delete"
@@ -180,13 +185,14 @@ function PaymentList() {
               }
             }}
           >
-            <Button
-              type="text"
-              danger
-              icon={<DeleteOutlined />}
-              size="small"
-              title="Delete Payment"
-            />
+            <Tooltip title="Delete payment">
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                size="small"
+              />
+            </Tooltip>
           </Popconfirm>
         </Space>
       ),
@@ -203,7 +209,7 @@ function PaymentList() {
 
       {/* Statistics */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card>
             <Statistic
               title="Total Payments"
@@ -212,7 +218,7 @@ function PaymentList() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card>
             <Statistic
               title="Total Amount"
@@ -222,7 +228,7 @@ function PaymentList() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card>
             <Statistic
               title="Average Payment"
@@ -234,34 +240,98 @@ function PaymentList() {
         </Col>
       </Row>
 
+      <Card style={{ marginBottom: 24 }}>
+        <Form
+          form={filterForm}
+          layout="vertical"
+          onFinish={(values) => {
+            const nextFilters = {
+              customer_id: values.customer_id,
+              from_date: values.date_range?.[0]?.format('YYYY-MM-DD'),
+              to_date: values.date_range?.[1]?.format('YYYY-MM-DD'),
+            };
+            setFilters(nextFilters);
+            fetchData(nextFilters);
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, justifyContent: 'space-evenly', flexWrap: 'nowrap' }}>
+            <div style={{ flex: '1 1 260px' }}>
+              <Form.Item name="customer_id" label="Customer" style={{ marginBottom: 0 }}>
+                <Select
+                  allowClear
+                  showSearch
+                  placeholder="Filter by customer name"
+                  optionFilterProp="label"
+                  options={customers.map(c => ({
+                    label: `${c.shop_name} (${c.full_name})`,
+                    value: c.id
+                  }))}
+                />
+              </Form.Item>
+            </div>
+            <div style={{ flex: '1 1 260px' }}>
+              <Form.Item name="date_range" label="Date Range" style={{ marginBottom: 0 }}>
+                <RangePicker style={{ width: '100%' }} />
+              </Form.Item>
+            </div>
+            <div style={{ flex: '0 0 auto' }}>
+              <Space wrap={false}>
+                <Tooltip title="Apply selected payment filters">
+                  <Button type="primary" htmlType="submit">
+                    Apply
+                  </Button>
+                </Tooltip>
+                <Tooltip title="Clear payment filters">
+                  <Button
+                    onClick={() => {
+                      filterForm.resetFields();
+                      setFilters({});
+                      fetchData({});
+                    }}
+                  >
+                    Reset
+                  </Button>
+                </Tooltip>
+              </Space>
+            </div>
+          </div>
+        </Form>
+      </Card>
+
       {/* Action Buttons */}
       <Card style={{ marginBottom: 24 }}>
         <Space wrap>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => {
-              setEditingPayment(null);
-              form.resetFields();
-              setDrawerOpen(true);
-            }}
-          >
-            Record New Payment
-          </Button>
-          <Button
-            icon={<FileExcelOutlined />}
-            onClick={exportToExcel}
-            style={{ background: '#10b981', color: '#fff', border: 'none' }}
-          >
-            Excel Export
-          </Button>
-          <Button
-            icon={<FilePdfOutlined />}
-            danger
-            onClick={exportToPDF}
-          >
-            PDF Export
-          </Button>
+          <Tooltip title="Record a new customer payment">
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => {
+                setEditingPayment(null);
+                form.resetFields();
+                setDrawerOpen(true);
+              }}
+            >
+              Record New Payment
+            </Button>
+          </Tooltip>
+          <Tooltip title="Export visible payments to Excel">
+            <Button
+              icon={<FileExcelOutlined />}
+              onClick={exportToExcel}
+              style={{ background: '#10b981', color: '#fff', border: 'none' }}
+            >
+              Excel Export
+            </Button>
+          </Tooltip>
+          <Tooltip title="Export visible payments to PDF">
+            <Button
+              icon={<FilePdfOutlined />}
+              danger
+              onClick={exportToPDF}
+            >
+              PDF Export
+            </Button>
+          </Tooltip>
         </Space>
       </Card>
 
@@ -351,24 +421,28 @@ function PaymentList() {
           </Form.Item>
 
           <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-            <Button
-              onClick={() => {
-                setDrawerOpen(false);
-                setEditingPayment(null);
-                form.resetFields();
-              }}
-              size="large"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="primary"
-              htmlType="submit"
-              loading={loading}
-              size="large"
-            >
-              {editingPayment ? 'Update Payment' : 'Record Payment'}
-            </Button>
+            <Tooltip title="Close without saving">
+              <Button
+                onClick={() => {
+                  setDrawerOpen(false);
+                  setEditingPayment(null);
+                  form.resetFields();
+                }}
+                size="large"
+              >
+                Cancel
+              </Button>
+            </Tooltip>
+            <Tooltip title={editingPayment ? 'Save payment changes' : 'Save this payment'}>
+              <Button
+                type="primary"
+                htmlType="submit"
+                loading={loading}
+                size="large"
+              >
+                {editingPayment ? 'Update Payment' : 'Record Payment'}
+              </Button>
+            </Tooltip>
           </Space>
         </Form>
       </Drawer>

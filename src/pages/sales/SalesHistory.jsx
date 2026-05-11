@@ -18,6 +18,7 @@ import {
   Spin,
   Tag,
   DatePicker,
+  Tooltip,
 } from "antd";
 import {
   MinusCircleOutlined,
@@ -257,9 +258,11 @@ function SalesHistory() {
       dataIndex: "invoice_number",
       key: "invoice_number",
       render: (text, record) => (
-        <Button type="link" onClick={() => handleInvoiceView(record.id)}>
-          <strong>{text}</strong>
-        </Button>
+        <Tooltip title="Open invoice details">
+          <Button type="link" onClick={() => handleInvoiceView(record.id)}>
+            <strong>{text}</strong>
+          </Button>
+        </Tooltip>
       ),
     },
     {
@@ -312,29 +315,32 @@ function SalesHistory() {
       fixed: "right",
       render: (_, record) => (
         <Space>
-          <Button
-            type="text"
-            icon={<EyeOutlined />}
-            size="small"
-            onClick={() => handleInvoiceView(record.id)}
-            title="View Invoice"
-          />
-          <Button
-            type="text"
-            icon={<EditOutlined />}
-            size="small"
-            onClick={() => handleEditSale(record.id)}
-            title="Edit Sale"
-          />
-          <Button
-            type="text"
-            danger
-            icon={<DeleteOutlined />}
-            size="small"
-            loading={deleteLoading}
-            onClick={() => handleDeleteSale(record.id)}
-            title="Delete Sale"
-          />
+          <Tooltip title="View invoice">
+            <Button
+              type="text"
+              icon={<EyeOutlined />}
+              size="small"
+              onClick={() => handleInvoiceView(record.id)}
+            />
+          </Tooltip>
+          <Tooltip title="Edit sale">
+            <Button
+              type="text"
+              icon={<EditOutlined />}
+              size="small"
+              onClick={() => handleEditSale(record.id)}
+            />
+          </Tooltip>
+          <Tooltip title="Delete sale">
+            <Button
+              type="text"
+              danger
+              icon={<DeleteOutlined />}
+              size="small"
+              loading={deleteLoading}
+              onClick={() => handleDeleteSale(record.id)}
+            />
+          </Tooltip>
         </Space>
       ),
     },
@@ -382,21 +388,37 @@ function SalesHistory() {
       </div>
 
       <Card style={{ marginBottom: 24 }}>
-        <Row gutter={16} align="middle">
-          <Col xs={24} sm={10} md={8}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 16,
+            flexWrap: "wrap",
+          }}
+        >
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-evenly",
+              gap: 12,
+              flex: "1 1 620px",
+              flexWrap: "wrap",
+            }}
+          >
             <Input.Search
               allowClear
               placeholder="Search invoices or customers"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onSearch={searchSales}
+              style={{ flex: "1 1 240px", minWidth: 220 }}
             />
-          </Col>
-          <Col xs={24} sm={8} md={6}>
             <Select
               allowClear
               placeholder="Sale Type"
-              style={{ width: "100%" }}
+              style={{ flex: "1 1 160px", minWidth: 150 }}
               value={saleTypeFilter}
               onChange={(value) => setSaleTypeFilter(value)}
               options={[
@@ -404,37 +426,64 @@ function SalesHistory() {
                 { label: "Credit", value: "credit" },
               ]}
             />
-          </Col>
-          <Col xs={24} sm={6} md={6}>
             <DatePicker.RangePicker
-              style={{ width: "100%" }}
+              style={{ flex: "1 1 260px", minWidth: 240 }}
               value={dateRange}
               onChange={setDateRange}
             />
-          </Col>
-          <Col xs={24} sm={24} md={4}>
-            <Space>
-              <Button type="primary" onClick={searchSales}>
-                Apply
-              </Button>
-              <Button
-                onClick={() => {
-                  setSearchTerm("");
-                  setSaleTypeFilter(undefined);
-                  setDateRange([]);
-                  fetchData();
-                }}
-              >
-                Reset
-              </Button>
+            <Space wrap={false}>
+              <Tooltip title="Apply sales filters">
+                <Button type="primary" onClick={searchSales}>
+                  Apply
+                </Button>
+              </Tooltip>
+              <Tooltip title="Clear sales filters">
+                <Button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSaleTypeFilter(undefined);
+                    setDateRange([]);
+                    fetchData();
+                  }}
+                >
+                  Reset
+                </Button>
+              </Tooltip>
             </Space>
-          </Col>
-        </Row>
+          </div>
+          <Space wrap style={{ justifyContent: "flex-end" }}>
+            {!location.pathname.startsWith("/invoices") && (
+              <Tooltip title="Create a new sale">
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={handleOpenSaleDrawer}
+                >
+                  Create Sale
+                </Button>
+              </Tooltip>
+            )}
+            <Tooltip title="Export visible sales to Excel">
+              <Button
+                icon={<FileExcelOutlined />}
+                onClick={exportToExcel}
+                style={{ background: "#10b981", color: "#fff", border: "none" }}
+              >
+                Excel Export
+              </Button>
+            </Tooltip>
+            <Tooltip title="Export visible sales to PDF">
+              <Button icon={<FilePdfOutlined />} danger onClick={exportToPDF}>
+                PDF Export
+              </Button>
+            </Tooltip>
+          </Space>
+        </div>
       </Card>
 
       {/* Statistics */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card>
             <Statistic
               title="Total Sales"
@@ -443,7 +492,7 @@ function SalesHistory() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card>
             <Statistic
               title="Total Amount"
@@ -453,7 +502,7 @@ function SalesHistory() {
             />
           </Card>
         </Col>
-        <Col xs={24} sm={12} md={6}>
+        <Col xs={24} sm={12} md={8}>
           <Card>
             <Statistic
               title="Total Balance"
@@ -464,31 +513,6 @@ function SalesHistory() {
           </Card>
         </Col>
       </Row>
-
-      {/* Action Buttons */}
-      <Card style={{ marginBottom: 24 }}>
-        <Space wrap>
-          {!location.pathname.startsWith("/invoices") && (
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleOpenSaleDrawer}
-            >
-              Create Sale
-            </Button>
-          )}
-          <Button
-            icon={<FileExcelOutlined />}
-            onClick={exportToExcel}
-            style={{ background: "#10b981", color: "#fff", border: "none" }}
-          >
-            Excel Export
-          </Button>
-          <Button icon={<FilePdfOutlined />} danger onClick={exportToPDF}>
-            PDF Export
-          </Button>
-        </Space>
-      </Card>
 
       {/* Sales Table */}
       <Card>
@@ -659,26 +683,30 @@ function SalesHistory() {
                         </Form.Item>
                       </Col>
                       <Col span={2}>
-                        <Button
-                          type="text"
-                          danger
-                          icon={<MinusCircleOutlined />}
-                          onClick={() => remove(field.name)}
-                          style={{ marginTop: 8 }}
-                        />
+                        <Tooltip title="Remove this item">
+                          <Button
+                            type="text"
+                            danger
+                            icon={<MinusCircleOutlined />}
+                            onClick={() => remove(field.name)}
+                            style={{ marginTop: 8 }}
+                          />
+                        </Tooltip>
                       </Col>
                     </Row>
                   </Card>
                 ))}
                 <Form.Item>
-                  <Button
-                    type="dashed"
-                    block
-                    icon={<PlusOutlined />}
-                    onClick={() => add()}
-                  >
-                    Add Item
-                  </Button>
+                  <Tooltip title="Add another product line">
+                    <Button
+                      type="dashed"
+                      block
+                      icon={<PlusOutlined />}
+                      onClick={() => add()}
+                    >
+                      Add Item
+                    </Button>
+                  </Tooltip>
                 </Form.Item>
               </>
             )}
@@ -703,23 +731,27 @@ function SalesHistory() {
 
           <Form.Item>
             <Space>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                size="large"
-              >
-                Save Sale
-              </Button>
-              <Button
-                onClick={() => {
-                  setDrawerOpen(false);
-                  form.resetFields();
-                }}
-                size="large"
-              >
-                Cancel
-              </Button>
+              <Tooltip title="Save sale and invoice">
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  loading={loading}
+                  size="large"
+                >
+                  Save Sale
+                </Button>
+              </Tooltip>
+              <Tooltip title="Close without saving">
+                <Button
+                  onClick={() => {
+                    setDrawerOpen(false);
+                    form.resetFields();
+                  }}
+                  size="large"
+                >
+                  Cancel
+                </Button>
+              </Tooltip>
             </Space>
           </Form.Item>
         </Form>

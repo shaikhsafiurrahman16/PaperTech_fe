@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Row, Col, Card, Table, Typography, message, Statistic, Spin, Tag, Space, Button } from 'antd';
+import { Row, Col, Card, Table, Typography, message, Statistic, Spin, Tag, Space, Button, DatePicker, Form, Tooltip } from 'antd';
 import { FileExcelOutlined, FilePdfOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -7,6 +7,7 @@ import autoTable from 'jspdf-autotable';
 import api from '../../api/axiosConfig';
 
 const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
+const { RangePicker } = DatePicker;
 
 function Reports() {
   const [summary, setSummary] = useState({});
@@ -14,16 +15,18 @@ function Reports() {
   const [balances, setBalances] = useState([]);
   const [monthlySales, setMonthlySales] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({});
+  const [filterForm] = Form.useForm();
 
-  useEffect(() => {
-    const loadReports = async () => {
+  const loadReports = async (nextFilters = filters) => {
       try {
         setLoading(true);
+        const params = { ...nextFilters };
         const [summaryRes, stockRes, balancesRes, monthlyRes] = await Promise.all([
-          api.get('/reports/dashboard'),
+          api.get('/reports/dashboard', { params }),
           api.get('/reports/stock'),
-          api.get('/reports/outstanding-balances'),
-          api.get('/reports/monthly-sales'),
+          api.get('/reports/outstanding-balances', { params }),
+          api.get('/reports/monthly-sales', { params }),
         ]);
         setSummary(summaryRes.data.data || {});
         setStock(stockRes.data.data || []);
@@ -34,7 +37,9 @@ function Reports() {
       } finally {
         setLoading(false);
       }
-    };
+  };
+
+  useEffect(() => {
     loadReports();
   }, []);
 
@@ -137,23 +142,70 @@ function Reports() {
       <div>
         <div style={{ marginBottom: 24, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <Typography.Title level={2} style={{ margin: 0 }}>Reports</Typography.Title>
-          <Space>
-            <Button
-              icon={<FileExcelOutlined />}
-              onClick={exportToExcel}
-              style={{ background: '#10b981', color: '#fff', border: 'none' }}
-            >
-              Export All Excel
-            </Button>
-            <Button
-              icon={<FilePdfOutlined />}
-              danger
-              onClick={exportToPDF}
-            >
-              Export All PDF
-            </Button>
+          <Space wrap>
+            <Tooltip title="Export report data to Excel">
+              <Button
+                icon={<FileExcelOutlined />}
+                onClick={exportToExcel}
+                style={{ background: '#10b981', color: '#fff', border: 'none' }}
+              >
+                Export All Excel
+              </Button>
+            </Tooltip>
+            <Tooltip title="Export report data to PDF">
+              <Button
+                icon={<FilePdfOutlined />}
+                danger
+                onClick={exportToPDF}
+              >
+                Export All PDF
+              </Button>
+            </Tooltip>
           </Space>
         </div>
+
+        <Card style={{ marginBottom: 24 }}>
+          <Form
+            form={filterForm}
+            layout="vertical"
+            onFinish={(values) => {
+              const nextFilters = {
+                from_date: values.date_range?.[0]?.format('YYYY-MM-DD'),
+                to_date: values.date_range?.[1]?.format('YYYY-MM-DD'),
+              };
+              setFilters(nextFilters);
+              loadReports(nextFilters);
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'flex-end', gap: 16, justifyContent: 'space-evenly', flexWrap: 'nowrap' }}>
+              <div style={{ flex: '1 1 360px' }}>
+                <Form.Item name="date_range" label="Report Date Range" style={{ marginBottom: 0 }}>
+                  <RangePicker style={{ width: '100%' }} />
+                </Form.Item>
+              </div>
+              <div style={{ flex: '0 0 auto' }}>
+                <Space wrap={false}>
+                  <Tooltip title="Apply report date range">
+                    <Button type="primary" htmlType="submit">
+                      Apply
+                    </Button>
+                  </Tooltip>
+                  <Tooltip title="Clear report date range">
+                    <Button
+                      onClick={() => {
+                        filterForm.resetFields();
+                        setFilters({});
+                        loadReports({});
+                      }}
+                    >
+                      Reset
+                    </Button>
+                  </Tooltip>
+                </Space>
+              </div>
+            </div>
+          </Form>
+        </Card>
 
         {/* Summary Cards */}
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
@@ -196,7 +248,7 @@ function Reports() {
         </Row>
 
         {/* Stock Report */}
-        <Card title="📦 Stock Status Report" style={{ marginBottom: 24 }}>
+        <Card title="Stock Status Report" style={{ marginBottom: 24 }}>
           <Table
             columns={[
               {
@@ -225,7 +277,7 @@ function Reports() {
                 key: 'status',
                 render: (_, record) => (
                   <Tag color={record.current_stock <= record.min_stock_alert ? 'red' : 'green'}>
-                    {record.current_stock <= record.min_stock_alert ? '⚠️ Low' : '✅ OK'}
+                    {record.current_stock <= record.min_stock_alert ? 'Low' : 'OK'}
                   </Tag>
                 )
               }
@@ -238,7 +290,7 @@ function Reports() {
         </Card>
 
         {/* Outstanding Balances */}
-        <Card title="💰 Outstanding Balances" style={{ marginBottom: 24 }}>
+        <Card title="Outstanding Balances" style={{ marginBottom: 24 }}>
           <Table
             columns={[
               {
@@ -267,7 +319,7 @@ function Reports() {
         </Card>
 
         {/* Monthly Sales */}
-        <Card title="📈 Monthly Sales Summary">
+        <Card title="Monthly Sales Summary">
           <Table
             columns={[
               {
