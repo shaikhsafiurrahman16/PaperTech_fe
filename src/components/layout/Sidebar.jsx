@@ -27,7 +27,7 @@ function Sidebar({ darkMode, onLogoutRequest }) {
   ];
 
   const customerMenuItems = [
-    { key: '/sales', icon: <FileTextOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'My Sales' },
+    { key: '/sales', icon: <FileTextOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'My Purchases' },
   ];
 
   const menuItems = user?.role === 'admin' ? adminMenuItems : customerMenuItems;
@@ -51,7 +51,7 @@ function Sidebar({ darkMode, onLogoutRequest }) {
         borderRight: darkMode ? '1px solid #334155' : '1px solid #e2e8f0'
       }}
       items={[
-        ...menuItems, 
+        ...menuItems,
         { key: 'logout', icon: <LogoutOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Logout' }
       ]}
     />

@@ -45,19 +45,15 @@ const PAPER_TYPE_OPTIONS = [
   "News",
   "Filecard",
 ];
-
 const SIZE_OPTIONS = [
   "23x36",
   "20x30",
   "25x36",
   "27x34",
-  "18",
-  "23",
+  "18x23",
   "17x27",
-  "30",
-  "40",
-  "22",
-  "28",
+  "30x40",
+  "22x28",
 ];
 
 const GRAM_OPTIONS = [
@@ -277,10 +273,10 @@ function ProductList() {
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredProducts = normalizedSearch
     ? products.filter((p) =>
-        [p.name, p.product_type, p.size, p.gram, p.unit_type, p.description]
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
-      )
+      [p.name, p.product_type, p.size, p.gram, p.unit_type, p.description]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
+    )
     : products;
 
   const columns = [
