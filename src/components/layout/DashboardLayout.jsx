@@ -13,6 +13,8 @@ import { logout } from "../../store/authSlice";
 import Sidebar from "./Sidebar";
 import AdminDashboard from "../../pages/dashboard/AdminDashboard";
 import CustomerList from "../../pages/customers/CustomerList";
+import VendorList from "../../pages/vendors/VendorList";
+import PurchaseList from "../../pages/purchases/PurchaseList";
 import ProductList from "../../pages/products/ProductList";
 import SalesHistory from "../../pages/sales/SalesHistory";
 import InvoiceDetails from "../../pages/invoices/InvoiceDetails";
@@ -193,6 +195,8 @@ function DashboardLayout() {
                   <>
                     <Route path="/dashboard" element={<AdminDashboard />} />
                     <Route path="/customers" element={<CustomerList />} />
+                    <Route path="/vendors" element={<VendorList />} />
+                    <Route path="/purchases" element={<PurchaseList />} />
                     <Route path="/products" element={<ProductList />} />
                     <Route path="/sales" element={<SalesHistory />} />
                     <Route path="/invoices" element={<SalesHistory />} />
@@ -205,12 +209,24 @@ function DashboardLayout() {
                       element={<Navigate to="/dashboard" replace />}
                     />
                   </>
+                ) : user?.role === "vendor" ? (
+                  <>
+                    <Route path="/purchases" element={<PurchaseList />} />
+                    <Route path="/invoices" element={<SalesHistory />} />
+                    <Route path="/invoices/:id" element={<InvoiceDetails />} />
+                    <Route
+                      path="*"
+                      element={<Navigate to="/purchases" replace />}
+                    />
+                  </>
                 ) : (
                   <>
                     <Route path="/sales" element={<CustomerSalesPage />} />
+                    <Route path="/invoices" element={<SalesHistory />} />
+                    <Route path="/invoices/:id" element={<InvoiceDetails />} />
                     <Route
                       path="*"
-                      element={<Navigate to="/sales" replace />}
+                      element={<Navigate to="/invoices" replace />}
                     />
                   </>
                 )}

@@ -13,7 +13,9 @@ import LedgerView from './pages/ledger/LedgerView';
 import DashboardLayout from './components/layout/DashboardLayout';
 
 function getHomePath(user) {
-  return user?.role === 'customer' ? '/sales' : '/dashboard';
+  if (user?.role === 'customer') return '/sales';
+  if (user?.role === 'vendor') return '/purchases';
+  return '/dashboard';
 }
 
 function PublicRoute({ children }) {

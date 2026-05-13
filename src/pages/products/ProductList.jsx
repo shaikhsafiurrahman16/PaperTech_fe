@@ -45,6 +45,7 @@ const PAPER_TYPE_OPTIONS = [
   "News",
   "Filecard",
 ];
+
 const SIZE_OPTIONS = [
   "23x36",
   "20x30",
@@ -217,7 +218,7 @@ function ProductList() {
       "Sheets Per Pack": p.sheets_per_pack,
       "Cost Price": `Rs. ${p.cost_price}`,
       "Sale Price": `Rs. ${p.sale_price}`,
-      "Current Stock": p.current_stock,
+      "Current Stock (Sheets)": p.current_stock,
       "Min Stock Alert": p.min_stock_alert,
     }));
 
@@ -312,7 +313,7 @@ function ProductList() {
       render: (text) => `Rs. ${text}`,
     },
     {
-      title: "Stock",
+      title: "Stock (Sheets)",
       dataIndex: "current_stock",
       key: "current_stock",
       render: (text, record) => (
@@ -597,14 +598,14 @@ function ProductList() {
             <Col span={12}>
               <Form.Item
                 name="current_stock"
-                label="Current Stock"
+                label="Current Stock (Sheets)"
                 rules={[{ required: true, message: "Current stock is required" }]}
               >
                 <InputNumber min={0} size="large" style={{ width: "100%" }} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="min_stock_alert" label="Low Stock Alert">
+              <Form.Item name="min_stock_alert" label="Low Stock Alert (Sheets)">
                 <InputNumber min={0} size="large" style={{ width: "100%" }} />
               </Form.Item>
             </Col>
@@ -660,7 +661,7 @@ function ProductList() {
               }}
             >
               <div>
-                <div style={{ fontSize: 12, opacity: 0.9 }}>Current Stock</div>
+                <div style={{ fontSize: 12, opacity: 0.9 }}>Current Stock (Sheets)</div>
                 <div style={{ fontSize: 32, fontWeight: "bold" }}>
                   {selectedProduct.current_stock}
                 </div>
@@ -678,11 +679,11 @@ function ProductList() {
             >
               <Form.Item
                 name="quantity"
-                label="Stock Change"
+                label="Stock Change (Sheets)"
                 rules={[{ required: true, message: "Enter quantity" }]}
               >
                 <InputNumber
-                  placeholder="e.g.: 50 (add) or -10 (reduce)"
+                  placeholder="e.g.: 500 (add) or -10 (reduce)"
                   style={{ width: "100%" }}
                   size="large"
                 />
@@ -690,8 +691,7 @@ function ProductList() {
 
               <Card style={{ background: "#f5f5f5", marginBottom: 16 }}>
                 <div style={{ fontSize: 12, color: "#999", marginBottom: 8 }}>
-                  <strong>Note:</strong> Positive values add stock, negative
-                  values subtract stock.
+                  <strong>Note:</strong> Values are in sheets. Positive adds sheets, negative subtracts sheets.
                 </div>
               </Card>
 

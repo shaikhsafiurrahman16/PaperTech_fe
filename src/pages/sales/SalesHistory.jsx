@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 import {
   Table,
   Button,
@@ -35,6 +36,7 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
 const formatMoney = (value) => `Rs. ${Number(value ?? 0).toFixed(2)}`;
+const getSheetsPerPack = (product) => Number(product?.sheets_per_pack || 1) || 1;
 
 function SalesHistory() {
   const [sales, setSales] = useState([]);
@@ -46,23 +48,54 @@ function SalesHistory() {
   const [pageLoading, setPageLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [saleTypeFilter, setSaleTypeFilter] = useState();
+  const [invoiceTypeFilter, setInvoiceTypeFilter] = useState("sale");
   const [dateRange, setDateRange] = useState([]);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [form] = Form.useForm();
   const location = useLocation();
   const navigate = useNavigate();
+  const { user } = useSelector((state) => state.auth);
+  const isAdmin = user?.role === "admin";
+  const isVendor = user?.role === "vendor";
+  const isInvoicePage = location.pathname.startsWith("/invoices");
+  const activeInvoiceType = isInvoicePage && isVendor ? "purchase" : invoiceTypeFilter;
 
   const fetchData = async (filters = {}) => {
     try {
       setPageLoading(true);
-      const [salesRes, customersRes, productsRes] = await Promise.all([
-        api.get("/sales", { params: filters }),
-        api.get("/customers"),
-        api.get("/products"),
-      ]);
-      setSales(salesRes.data.data || []);
-      setCustomers(customersRes.data.data || []);
-      setProducts(productsRes.data.data || []);
+      if (isInvoicePage && activeInvoiceType === "purchase") {
+        const [purchaseRes] = await Promise.all([
+          api.get("/purchases", { params: filters }),
+        ]);
+        const normalizedPurchases = (purchaseRes.data.data || []).map((purchase) => ({
+          ...purchase,
+          invoice_number: purchase.purchase_number,
+          shop_name: purchase.company_name || purchase.full_name,
+          payment_received: purchase.payment_paid,
+          sale_type: purchase.purchase_type,
+          invoice_source: "purchase",
+        }));
+        setSales(normalizedPurchases);
+        setCustomers([]);
+        setProducts([]);
+        return;
+      }
+
+      const requests = [api.get("/sales", { params: filters })];
+      if (isAdmin) {
+        requests.push(api.get("/customers"));
+        requests.push(api.get("/products"));
+      }
+      const responses = await Promise.all(requests);
+      const salesRes = responses[0];
+      setSales((salesRes.data.data || []).map((sale) => ({ ...sale, invoice_source: "sale" })));
+      if (isAdmin) {
+        setCustomers(responses[1].data.data || []);
+        setProducts(responses[2].data.data || []);
+      } else {
+        setCustomers([]);
+        setProducts([]);
+      }
     } catch (error) {
       message.error("Failed to load data");
     } finally {
@@ -72,12 +105,13 @@ function SalesHistory() {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [isInvoicePage, activeInvoiceType, isAdmin]);
 
   const searchSales = () => {
     const filters = {
       search: searchTerm || undefined,
-      sale_type: saleTypeFilter,
+      sale_type: activeInvoiceType === "purchase" ? undefined : saleTypeFilter,
+      purchase_type: activeInvoiceType === "purchase" ? saleTypeFilter : undefined,
       from_date: dateRange?.[0] ? dateRange[0].format("YYYY-MM-DD") : undefined,
       to_date: dateRange?.[1] ? dateRange[1].format("YYYY-MM-DD") : undefined,
     };
@@ -105,6 +139,7 @@ function SalesHistory() {
           product_id: item.product_id,
           quantity: item.quantity,
           unit_price: Number(item.unit_price),
+          quantity_unit: "pack",
         })),
       });
       setDrawerOpen(true);
@@ -133,15 +168,25 @@ function SalesHistory() {
   const onFinish = async (values) => {
     try {
       setLoading(true);
+      const productMap = new Map(products.map((p) => [Number(p.id), p]));
       const payload = {
         ...values,
         discount: Number(values.discount || 0),
         payment_received: Number(values.payment_received || 0),
         items: (values.items || []).map((item) => ({
-          ...item,
           product_id: Number(item.product_id),
-          quantity: Number(item.quantity || 0),
-          unit_price: Number(item.unit_price || 0),
+          quantity: (() => {
+            const product = productMap.get(Number(item.product_id));
+            const sheetsPerPack = getSheetsPerPack(product);
+            const qty = Number(item.quantity || 0);
+            return item.quantity_unit === "pack" ? qty * sheetsPerPack : qty;
+          })(),
+          unit_price: (() => {
+            const product = productMap.get(Number(item.product_id));
+            const sheetsPerPack = getSheetsPerPack(product);
+            const price = Number(item.unit_price || 0);
+            return item.quantity_unit === "pack" ? price / sheetsPerPack : price;
+          })(),
         })),
       };
 
@@ -163,8 +208,8 @@ function SalesHistory() {
     }
   };
 
-  const handleInvoiceView = (saleId) => {
-    navigate(`/invoices/${saleId}`);
+  const handleInvoiceView = (invoiceId, source = "sale") => {
+    navigate(`/invoices/${invoiceId}`, { state: { invoiceSource: source } });
   };
 
   const exportToExcel = () => {
@@ -259,7 +304,10 @@ function SalesHistory() {
       key: "invoice_number",
       render: (text, record) => (
         <Tooltip title="Open invoice details">
-          <Button type="link" onClick={() => handleInvoiceView(record.id)}>
+          <Button
+            type="link"
+            onClick={() => handleInvoiceView(record.id, record.invoice_source || "sale")}
+          >
             <strong>{text}</strong>
           </Button>
         </Tooltip>
@@ -320,7 +368,7 @@ function SalesHistory() {
               type="text"
               icon={<EyeOutlined />}
               size="small"
-              onClick={() => handleInvoiceView(record.id)}
+              onClick={() => handleInvoiceView(record.id, record.invoice_source || "sale")}
             />
           </Tooltip>
           <Tooltip title="Edit sale">
@@ -328,6 +376,7 @@ function SalesHistory() {
               type="text"
               icon={<EditOutlined />}
               size="small"
+              disabled={record.invoice_source === "purchase" || !isAdmin}
               onClick={() => handleEditSale(record.id)}
             />
           </Tooltip>
@@ -337,6 +386,7 @@ function SalesHistory() {
               danger
               icon={<DeleteOutlined />}
               size="small"
+              disabled={record.invoice_source === "purchase" || !isAdmin}
               loading={deleteLoading}
               onClick={() => handleDeleteSale(record.id)}
             />
@@ -417,7 +467,7 @@ function SalesHistory() {
             />
             <Select
               allowClear
-              placeholder="Sale Type"
+              placeholder={isInvoicePage && activeInvoiceType === "purchase" ? "Purchase Type" : "Sale Type"}
               style={{ flex: "1 1 160px", minWidth: 150 }}
               value={saleTypeFilter}
               onChange={(value) => setSaleTypeFilter(value)}
@@ -426,6 +476,20 @@ function SalesHistory() {
                 { label: "Credit", value: "credit" },
               ]}
             />
+            {isInvoicePage && (
+              <Select
+                value={activeInvoiceType}
+                onChange={(value) => {
+                  setInvoiceTypeFilter(value);
+                  setSaleTypeFilter(undefined);
+                }}
+                style={{ flex: "1 1 170px", minWidth: 170 }}
+                options={[
+                  { label: "Sale Invoices", value: "sale" },
+                  ...(isAdmin || isVendor ? [{ label: "Purchase Invoices", value: "purchase" }] : []),
+                ]}
+              />
+            )}
             <DatePicker.RangePicker
               style={{ flex: "1 1 260px", minWidth: 240 }}
               value={dateRange}
@@ -452,7 +516,7 @@ function SalesHistory() {
             </Space>
           </div>
           <Space wrap style={{ justifyContent: "flex-end" }}>
-            {!location.pathname.startsWith("/invoices") && (
+            {isAdmin && !location.pathname.startsWith("/invoices") && (
               <Tooltip title="Create a new sale">
                 <Button
                   type="primary"
@@ -603,14 +667,14 @@ function SalesHistory() {
           </Card>
           <Form.List
             name="items"
-            initialValue={[{ product_id: null, quantity: 1, unit_price: 0 }]}
+            initialValue={[{ product_id: null, quantity: 1, unit_price: 0, quantity_unit: "pack" }]}
           >
             {(fields, { add, remove }) => (
               <>
                 {fields.map((field) => (
                   <Card key={field.key} style={{ marginBottom: 12 }}>
                     <Row gutter={16} align="middle">
-                      <Col span={10}>
+                      <Col span={8}>
                         <Form.Item
                           {...field}
                           name={[field.name, "product_id"]}
@@ -636,6 +700,10 @@ function SalesHistory() {
                                   ["items", field.name, "unit_price"],
                                   Number(selected.sale_price || 0),
                                 );
+                                form.setFieldValue(
+                                  ["items", field.name, "quantity_unit"],
+                                  "pack",
+                                );
                                 form.validateFields([
                                   ["items", field.name, "unit_price"],
                                 ]);
@@ -644,7 +712,7 @@ function SalesHistory() {
                           />
                         </Form.Item>
                       </Col>
-                      <Col span={6}>
+                      <Col span={5}>
                         <Form.Item
                           {...field}
                           name={[field.name, "quantity"]}
@@ -663,12 +731,52 @@ function SalesHistory() {
                           <InputNumber min={1} style={{ width: "100%" }} />
                         </Form.Item>
                       </Col>
-                      <Col span={6}>
+                      <Col span={5}>
+                        <Form.Item
+                          {...field}
+                          name={[field.name, "quantity_unit"]}
+                          fieldKey={[field.fieldKey, "quantity_unit"]}
+                          label="Unit"
+                          initialValue="pack"
+                          rules={[{ required: true, message: "Select unit" }]}
+                          style={{ marginBottom: 0 }}
+                        >
+                          <Select
+                            options={[
+                              { label: "Pack/Rim", value: "pack" },
+                              { label: "Sheets", value: "sheet" },
+                            ]}
+                            onChange={(value) => {
+                              const productId = form.getFieldValue([
+                                "items",
+                                field.name,
+                                "product_id",
+                              ]);
+                              const selected = products.find((p) => p.id === productId);
+                              if (!selected) {
+                                return;
+                              }
+                              if (value === "sheet") {
+                                form.setFieldValue(
+                                  ["items", field.name, "unit_price"],
+                                  Number(selected.sale_price || 0) / getSheetsPerPack(selected),
+                                );
+                              } else {
+                                form.setFieldValue(
+                                  ["items", field.name, "unit_price"],
+                                  Number(selected.sale_price || 0),
+                                );
+                              }
+                            }}
+                          />
+                        </Form.Item>
+                      </Col>
+                      <Col span={4}>
                         <Form.Item
                           {...field}
                           name={[field.name, "unit_price"]}
                           fieldKey={[field.fieldKey, "unit_price"]}
-                          label="Unit Price"
+                          label="Price"
                           rules={[
                             {
                               required: true,
@@ -702,7 +810,7 @@ function SalesHistory() {
                       type="dashed"
                       block
                       icon={<PlusOutlined />}
-                      onClick={() => add()}
+                      onClick={() => add({ product_id: null, quantity: 1, unit_price: 0, quantity_unit: "pack" })}
                     >
                       Add Item
                     </Button>
