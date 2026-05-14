@@ -1,8 +1,19 @@
 import { createSlice } from '@reduxjs/toolkit';
 
+function getStoredUser() {
+  try {
+    const storedUser = localStorage.getItem('papertech_user');
+    return storedUser ? JSON.parse(storedUser) : null;
+  } catch (error) {
+    localStorage.removeItem('papertech_user');
+    localStorage.removeItem('papertech_token');
+    return null;
+  }
+}
+
 const initialState = {
   token: localStorage.getItem('papertech_token') || null,
-  user: JSON.parse(localStorage.getItem('papertech_user')) || null,
+  user: getStoredUser(),
 };
 
 const authSlice = createSlice({
