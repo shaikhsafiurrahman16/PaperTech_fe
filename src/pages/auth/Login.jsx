@@ -65,7 +65,9 @@ function Login() {
         }),
       );
       message.success("Login Successful");
-      navigate(response.data.data.role === "customer" ? "/sales" : "/dashboard", {
+      const role = response.data.data.role;
+      const nextPath = role === "super_admin" ? "/companies" : role === "customer" ? "/sales" : role === "vendor" ? "/purchases" : "/dashboard";
+      navigate(nextPath, {
         replace: true,
       });
     } catch (error) {

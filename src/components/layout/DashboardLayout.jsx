@@ -1,6 +1,6 @@
 import { Layout, theme, Button, Dropdown, Space, ConfigProvider, Modal } from "antd";
 import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   BgColorsOutlined,
   UserOutlined,
@@ -22,6 +22,9 @@ import PaymentList from "../../pages/payments/PaymentList";
 import Reports from "../../pages/reports/Reports";
 import LedgerView from "../../pages/ledger/LedgerView";
 import CustomerSalesPage from "../../pages/sales/CustomerSalesPage";
+import ChatSupport from "../../pages/chat/ChatSupport";
+import CompaniesPage from "../../pages/companies/CompaniesPage";
+import api from "../../api/axiosConfig";
 
 const { Header, Content, Sider, Footer } = Layout;
 
@@ -30,6 +33,10 @@ function DashboardLayout() {
     localStorage.getItem("papertech_darkMode") === "true",
   );
   const [logoutModalOpen, setLogoutModalOpen] = useState(false);
+  const [chatUnreadTotal, setChatUnreadTotal] = useState(0);
+  const previousUnreadRef = useRef(0);
+  const previousIncomingIdRef = useRef(0);
+  const chatNotificationInitializedRef = useRef(false);
   const { user } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -53,6 +60,57 @@ function DashboardLayout() {
     setDarkMode(newMode);
     localStorage.setItem("papertech_darkMode", newMode);
   };
+
+  const playNotificationSound = () => {
+    try {
+      const AudioCtx = window.AudioContext || window.webkitAudioContext;
+      if (!AudioCtx) return;
+      const ctx = new AudioCtx();
+      const oscillator = ctx.createOscillator();
+      const gain = ctx.createGain();
+      oscillator.type = "sine";
+      oscillator.frequency.value = 880;
+      gain.gain.value = 0.08;
+      oscillator.connect(gain);
+      gain.connect(ctx.destination);
+      oscillator.start();
+      oscillator.stop(ctx.currentTime + 0.18);
+    } catch (error) {
+    }
+  };
+
+  useEffect(() => {
+    if (!user?.role) return undefined;
+
+    let mounted = true;
+    const pollContacts = async () => {
+      try {
+        const response = await api.get("/chat/unread-summary");
+        if (!mounted) return;
+        const totalUnread = Number(response.data?.data?.total_unread || 0);
+        const latestIncomingId = Number(response.data?.data?.latest_incoming_message_id || 0);
+        setChatUnreadTotal(totalUnread);
+        if (
+          chatNotificationInitializedRef.current &&
+          (totalUnread > previousUnreadRef.current ||
+            latestIncomingId > previousIncomingIdRef.current)
+        ) {
+          playNotificationSound();
+        }
+        previousUnreadRef.current = totalUnread;
+        previousIncomingIdRef.current = latestIncomingId;
+        chatNotificationInitializedRef.current = true;
+      } catch (error) {
+      }
+    };
+
+    pollContacts();
+    const intervalId = setInterval(pollContacts, 5000);
+    return () => {
+      mounted = false;
+      clearInterval(intervalId);
+    };
+  }, [user?.role]);
 
   const confirmLogout = () => {
     dispatch(logout());
@@ -126,7 +184,11 @@ function DashboardLayout() {
           >
             <div style={{ letterSpacing: "1px" }}>PAPERTECH</div>
           </div>
-          <Sidebar darkMode={darkMode} onLogoutRequest={() => setLogoutModalOpen(true)} />
+          <Sidebar
+            darkMode={darkMode}
+            onLogoutRequest={() => setLogoutModalOpen(true)}
+            chatUnreadTotal={chatUnreadTotal}
+          />
         </Sider>
         <Layout>
           <Header
@@ -149,7 +211,7 @@ function DashboardLayout() {
                 color: darkMode ? "#e0e7ff" : "#1e293b",
               }}
             >
-              Welcome, {user?.full_name || user?.username}
+              Welcome, {user?.full_name || user?.username}{user?.company_name ? ` - ${user.company_name}` : ""}
             </div>
             <Space size="large">
               <Button
@@ -191,7 +253,15 @@ function DashboardLayout() {
               }}
             >
               <Routes>
-                {user?.role === "admin" ? (
+                {user?.role === "super_admin" ? (
+                  <>
+                    <Route path="/companies" element={<CompaniesPage />} />
+                    <Route
+                      path="*"
+                      element={<Navigate to="/companies" replace />}
+                    />
+                  </>
+                ) : user?.role === "admin" ? (
                   <>
                     <Route path="/dashboard" element={<AdminDashboard />} />
                     <Route path="/customers" element={<CustomerList />} />
@@ -204,6 +274,7 @@ function DashboardLayout() {
                     <Route path="/payments" element={<PaymentList />} />
                     <Route path="/reports" element={<Reports />} />
                     <Route path="/ledger" element={<LedgerView />} />
+                    <Route path="/chat" element={<ChatSupport />} />
                     <Route
                       path="*"
                       element={<Navigate to="/dashboard" replace />}
@@ -214,6 +285,7 @@ function DashboardLayout() {
                     <Route path="/purchases" element={<PurchaseList />} />
                     <Route path="/invoices" element={<SalesHistory />} />
                     <Route path="/invoices/:id" element={<InvoiceDetails />} />
+                    <Route path="/chat" element={<ChatSupport />} />
                     <Route
                       path="*"
                       element={<Navigate to="/purchases" replace />}
@@ -224,6 +296,7 @@ function DashboardLayout() {
                     <Route path="/sales" element={<CustomerSalesPage />} />
                     <Route path="/invoices" element={<SalesHistory />} />
                     <Route path="/invoices/:id" element={<InvoiceDetails />} />
+                    <Route path="/chat" element={<ChatSupport />} />
                     <Route
                       path="*"
                       element={<Navigate to="/invoices" replace />}

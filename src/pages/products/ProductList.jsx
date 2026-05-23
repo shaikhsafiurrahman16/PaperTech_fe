@@ -25,7 +25,6 @@ import {
   FileExcelOutlined,
   FilePdfOutlined,
   EditOutlined,
-  DatabaseOutlined,
 } from "@ant-design/icons";
 import api from "../../api/axiosConfig";
 import * as XLSX from "xlsx";
@@ -85,11 +84,9 @@ const getSheetsPerPack = (unitType) =>
 function ProductList() {
   const [products, setProducts] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
-  const [stockDrawerOpen, setStockDrawerOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const selectedUnitType = Form.useWatch("unit_type", form);
 
@@ -167,20 +164,6 @@ function ProductList() {
       message.error(error.response?.data?.message || "Failed to save product");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleStockUpdate = async (productId, quantity) => {
-    try {
-      await api.patch(`/products/${productId}/stock`, {
-        quantity_change: quantity,
-      });
-      message.success("Stock updated successfully");
-      setStockDrawerOpen(false);
-      setSelectedProduct(null);
-      fetchProducts();
-    } catch (error) {
-      message.error("Failed to update stock");
     }
   };
 
@@ -335,17 +318,6 @@ function ProductList() {
               icon={<EditOutlined />}
               size="small"
               onClick={() => handleEditProduct(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Update product stock">
-            <Button
-              type="text"
-              icon={<DatabaseOutlined />}
-              size="small"
-              onClick={() => {
-                setSelectedProduct(record);
-                setStockDrawerOpen(true);
-              }}
             />
           </Tooltip>
           <Tooltip title="Delete product">
@@ -601,7 +573,7 @@ function ProductList() {
                 label="Current Stock (Sheets)"
                 rules={[{ required: true, message: "Current stock is required" }]}
               >
-                <InputNumber min={0} size="large" style={{ width: "100%" }} />
+                <InputNumber min={0} size="large" style={{ width: "100%" }} disabled={Boolean(editingProduct)} />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -641,81 +613,6 @@ function ProductList() {
         </Form>
       </Drawer>
 
-      <Drawer
-        title="Update Stock"
-        open={stockDrawerOpen}
-        onClose={() => {
-          setStockDrawerOpen(false);
-          setSelectedProduct(null);
-        }}
-        width={400}
-        bodyStyle={{ paddingBottom: 80 }}
-      >
-        {selectedProduct && (
-          <div>
-            <Card
-              style={{
-                marginBottom: 24,
-                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                color: "white",
-              }}
-            >
-              <div>
-                <div style={{ fontSize: 12, opacity: 0.9 }}>Current Stock (Sheets)</div>
-                <div style={{ fontSize: 32, fontWeight: "bold" }}>
-                  {selectedProduct.current_stock}
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.8, marginTop: 4 }}>
-                  {selectedProduct.name}
-                </div>
-              </div>
-            </Card>
-
-            <Form
-              layout="vertical"
-              onFinish={(values) =>
-                handleStockUpdate(selectedProduct.id, values.quantity)
-              }
-            >
-              <Form.Item
-                name="quantity"
-                label="Stock Change (Sheets)"
-                rules={[{ required: true, message: "Enter quantity" }]}
-              >
-                <InputNumber
-                  placeholder="e.g.: 500 (add) or -10 (reduce)"
-                  style={{ width: "100%" }}
-                  size="large"
-                />
-              </Form.Item>
-
-              <Card style={{ background: "#f5f5f5", marginBottom: 16 }}>
-                <div style={{ fontSize: 12, color: "#999", marginBottom: 8 }}>
-                  <strong>Note:</strong> Values are in sheets. Positive adds sheets, negative subtracts sheets.
-                </div>
-              </Card>
-
-              <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-                <Tooltip title="Close without updating stock">
-                  <Button onClick={() => setStockDrawerOpen(false)} size="large">
-                    Cancel
-                  </Button>
-                </Tooltip>
-                <Tooltip title="Apply this stock change">
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    loading={loading}
-                    size="large"
-                  >
-                    Update
-                  </Button>
-                </Tooltip>
-              </Space>
-            </Form>
-          </div>
-        )}
-      </Drawer>
     </div>
   );
 }
