@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Form, Input, Modal, Popconfirm, Space, Table, Typography, App, Tag } from 'antd';
 import api from '../../api/axiosConfig';
+import PageHeader from '../../components/layout/PageHeader';
 
 const { Title } = Typography;
 
@@ -113,13 +114,16 @@ function CompaniesPage() {
 
   return (
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
-      <Card>
-        <Space style={{ width: '100%', justifyContent: 'space-between', marginBottom: 14 }}>
-          <Title level={4} style={{ marginTop: 0, marginBottom: 0, letterSpacing: 0.2 }}>Companies</Title>
-          <Button type="primary" size="large" style={{ borderRadius: 10, fontWeight: 600 }} onClick={() => setCreateOpen(true)}>
+      <PageHeader
+        title="Companies"
+        description="Manage company records and their admin accounts."
+        actions={[
+          <Button key="create" type="primary" size="large" style={{ borderRadius: 10, fontWeight: 600 }} onClick={() => setCreateOpen(true)}>
             Create Company
-          </Button>
-        </Space>
+          </Button>,
+        ]}
+      />
+      <Card>
         <Table
           rowKey="id"
           columns={columns}

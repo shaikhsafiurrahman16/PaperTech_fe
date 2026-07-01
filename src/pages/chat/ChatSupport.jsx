@@ -1,8 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Button, Card, Empty, Input, List, Space, Tag, Typography, message as antMessage, theme } from "antd";
 import { SendOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import api from "../../api/axiosConfig";
+import PageHeader from "../../components/layout/PageHeader";
 
 const { Text, Title } = Typography;
 
@@ -20,6 +21,8 @@ function ChatSupport() {
   const [draft, setDraft] = useState("");
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
+  const activeContactRef = useRef(null);
+  const contactsLoadedOnceRef = useRef(false);
   const {
     token: { colorText, colorTextSecondary, colorPrimaryBg, colorBgContainer, colorBorderSecondary },
   } = theme.useToken();
@@ -34,9 +37,10 @@ function ChatSupport() {
       const response = await api.get("/chat/contacts");
       const list = response.data?.data || [];
       setContacts(list);
-      if (!activeContact && list.length) {
+      if (!activeContactRef.current && list.length) {
         setActiveContact(list[0]);
       }
+      contactsLoadedOnceRef.current = true;
     } catch (error) {
       antMessage.error(error.response?.data?.message || "Failed to load chat contacts");
     }
@@ -48,7 +52,9 @@ function ChatSupport() {
     try {
       const response = await api.get(`/chat/${contact.role}/${contact.id}/messages`);
       setChatMessages(response.data?.data || []);
-      await loadContacts();
+      if (!silent || !contactsLoadedOnceRef.current) {
+        await loadContacts();
+      }
     } catch (error) {
       antMessage.error(error.response?.data?.message || "Failed to load messages");
     } finally {
@@ -67,6 +73,7 @@ function ChatSupport() {
 
   useEffect(() => {
     if (!activeContact) return;
+    activeContactRef.current = activeContact;
     loadMessages(activeContact);
     const intervalId = setInterval(() => {
       loadMessages(activeContact, true);
@@ -91,19 +98,15 @@ function ChatSupport() {
   };
 
   return (
-    <Card>
+    <Card bordered={false} style={{ borderRadius: 20 }}>
       <Space direction="vertical" size={16} style={{ width: "100%" }}>
-        <div>
-          <Title level={4} style={{ margin: 0 }}>Chat Support</Title>
-          <Text type="secondary">
-            {user?.role === "admin"
-              ? "Chat with vendors and customers"
-              : "Chat with admin support"}
-          </Text>
-        </div>
+        <PageHeader
+          title="Chat Support"
+          description={user?.role === "admin" ? "Chat with vendors and customers" : "Chat with admin support"}
+        />
 
-        <div style={{ display: "grid", gridTemplateColumns: "300px 1fr", gap: 16 }}>
-          <Card size="small" title="Contacts">
+        <div style={{ display: "grid", gridTemplateColumns: "300px minmax(0, 1fr)", gap: 16 }}>
+          <Card size="small" title="Contacts" style={{ borderRadius: 16 }}>
             <List
               dataSource={contacts}
               locale={{ emptyText: <Empty description="No contacts available" /> }}
@@ -152,6 +155,7 @@ function ChatSupport() {
               )
             }
             loading={loading}
+            style={{ borderRadius: 16 }}
           >
             {!activeContact ? (
               <Empty description="Select a contact to start chat" />
