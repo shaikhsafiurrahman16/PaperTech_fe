@@ -267,7 +267,6 @@ function CustomerSalesPage() {
               icon={<FileExcelOutlined />} 
               onClick={exportToExcel}
               type="primary"
-              style={{ background: '#10b981' }}
             >
               Excel Export
             </Button>

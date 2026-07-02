@@ -318,7 +318,7 @@ function PaymentList() {
             <Button
               icon={<FileExcelOutlined />}
               onClick={exportToExcel}
-              style={{ background: '#10b981', color: '#fff', border: 'none' }}
+              type="primary"
             >
               Excel Export
             </Button>

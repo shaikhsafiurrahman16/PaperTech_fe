@@ -3,11 +3,13 @@ import { Card, Space, Typography } from "antd";
 function PageHeader({ title, description, actions }) {
   return (
     <Card
+      className="papertech-glass papertech-fade-in"
       bordered={false}
       style={{
         marginBottom: 24,
         borderRadius: 20,
-        background: "linear-gradient(135deg, rgba(91, 82, 217, 0.12), rgba(16, 185, 129, 0.08))",
+        background:
+          "linear-gradient(135deg, color-mix(in srgb, var(--papertech-primary) 14%, var(--papertech-surface-strong)) 0%, color-mix(in srgb, var(--papertech-success) 10%, var(--papertech-surface-strong)) 100%)",
       }}
     >
       <Space

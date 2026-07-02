@@ -531,7 +531,7 @@ function SalesHistory() {
               <Button
                 icon={<FileExcelOutlined />}
                 onClick={exportToExcel}
-                style={{ background: "#10b981", color: "#fff", border: "none" }}
+                type="primary"
               >
                 Excel Export
               </Button>
@@ -591,6 +591,8 @@ function SalesHistory() {
             pagination={{ pageSize: 15, showSizeChanger: true }}
             scroll={{ x: 1000 }}
             bordered
+            sticky
+            className="papertech-table-wrapper"
           />
         </Spin>
       </Card>

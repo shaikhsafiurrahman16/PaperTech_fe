@@ -9,6 +9,10 @@ const api = axios.create({
   },
 });
 
+function getLoginPath() {
+  return window.papertechDesktop ? '#/login' : '/login';
+}
+
 api.interceptors.request.use(config => {
   const state = store.getState();
   const token = state.auth.token;
@@ -23,8 +27,9 @@ api.interceptors.response.use(
   error => {
     if (error.response?.status === 401) {
       store.dispatch(logout());
-      if (window.location.pathname !== '/login') {
-        window.location.replace('/login');
+      const currentPath = window.papertechDesktop ? window.location.hash : window.location.pathname;
+      if (!String(currentPath).includes('/login')) {
+        window.location.replace(getLoginPath());
       }
     }
     return Promise.reject(error);

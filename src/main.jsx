@@ -1,25 +1,26 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, HashRouter } from "react-router-dom";
 import { Provider } from "react-redux";
 import { App as AntApp } from "antd";
 import "antd/dist/reset.css";
 import "./index.css";
 import App from "./App";
 import store from "./store";
+import { AppThemeProvider } from "./theme/AppThemeContext";
 
-if (localStorage.getItem("papertech_darkMode") === "true") {
-  document.documentElement.classList.add("dark");
-}
+const Router = window.papertechDesktop ? HashRouter : BrowserRouter;
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
     <Provider store={store}>
-      <BrowserRouter>
-        <AntApp>
-          <App />
-        </AntApp>
-      </BrowserRouter>
+      <AppThemeProvider>
+        <Router>
+          <AntApp>
+            <App />
+          </AntApp>
+        </Router>
+      </AppThemeProvider>
     </Provider>
   </React.StrictMode>,
 );

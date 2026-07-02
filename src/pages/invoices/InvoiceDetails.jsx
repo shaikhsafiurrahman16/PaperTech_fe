@@ -167,6 +167,8 @@ function InvoiceDetails() {
               dataSource={items}
               rowKey={(record) => record.id}
               pagination={false}
+              sticky
+              className="papertech-table-wrapper"
             />
           </Card>
 

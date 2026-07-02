@@ -1,108 +1,148 @@
-import { Badge, Menu } from 'antd';
+import { Badge, Button, Menu } from "antd";
 import {
-  UserOutlined,
-  ShoppingOutlined,
-  FileTextOutlined,
-  DollarOutlined,
-  BarChartOutlined,
-  LogoutOutlined,
-  TeamOutlined,
-  ShoppingCartOutlined,
-  MessageOutlined,
   ApartmentOutlined,
-} from '@ant-design/icons';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { useSelector } from 'react-redux';
+  BarChartOutlined,
+  DashboardOutlined,
+  DollarOutlined,
+  FileTextOutlined,
+  LockOutlined,
+  MessageOutlined,
+  ShoppingCartOutlined,
+  ShoppingOutlined,
+  TeamOutlined,
+  UserOutlined,
+  LogoutOutlined,
+} from "@ant-design/icons";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useSelector } from "react-redux";
 
-function Sidebar({ darkMode, onLogoutRequest, chatUnreadTotal = 0 }) {
+function Sidebar({
+  darkMode,
+  collapsed,
+  onLogoutRequest,
+  onChangePasswordRequest,
+  chatUnreadTotal = 0,
+}) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useSelector(state => state.auth);
+  const { user } = useSelector((state) => state.auth);
+  const currentPath = window.papertechDesktop
+    ? location.hash.replace(/^#/, "") || "/dashboard"
+    : location.pathname;
+  const selectedPath = currentPath.startsWith("/invoices/") ? "/invoices" : currentPath;
 
-  const superAdminMenuItems = [
-    { key: '/companies', icon: <ApartmentOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Companies' },
-  ];
-
-  const adminMenuItems = [
-    { key: '/dashboard', icon: <ShoppingOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Dashboard' },
-    { key: '/customers', icon: <UserOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Customers' },
-    { key: '/vendors', icon: <TeamOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Vendors' },
-    { key: '/purchases', icon: <ShoppingCartOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Purchases' },
-    { key: '/products', icon: <ShoppingOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Products' },
-    { key: '/sales', icon: <FileTextOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Sales' },
-    { key: '/invoices', icon: <FileTextOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Invoices' },
-    { key: '/payments', icon: <DollarOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Payments' },
-    { key: '/reports', icon: <BarChartOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Reports' },
-    {
-      key: '/chat',
-      icon: <MessageOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />,
-      label: (
-        <Badge dot={chatUnreadTotal > 0} offset={[6, 0]}>
-          <span>Chat Support</span>
-        </Badge>
-      ),
-    },
-  ];
-
-  const customerMenuItems = [
-    { key: '/sales', icon: <FileTextOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'My Purchases' },
-    { key: '/invoices', icon: <FileTextOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'My Invoices' },
-    {
-      key: '/chat',
-      icon: <MessageOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />,
-      label: (
-        <Badge dot={chatUnreadTotal > 0} offset={[6, 0]}>
-          <span>Chat Support</span>
-        </Badge>
-      ),
-    },
-  ];
-
-  const vendorMenuItems = [
-    { key: '/purchases', icon: <ShoppingCartOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'My Purchases' },
-    { key: '/invoices', icon: <FileTextOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'My Invoices' },
-    {
-      key: '/chat',
-      icon: <MessageOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />,
-      label: (
-        <Badge dot={chatUnreadTotal > 0} offset={[6, 0]}>
-          <span>Chat Support</span>
-        </Badge>
-      ),
-    },
-  ];
-
-  const menuItems = user?.role === 'super_admin'
-    ? superAdminMenuItems
-    : user?.role === 'admin'
-    ? adminMenuItems
-    : user?.role === 'vendor'
-      ? vendorMenuItems
-      : customerMenuItems;
-
-  const onMenuClick = ({ key }) => {
-    if (key === 'logout') {
-      onLogoutRequest?.();
-      return;
-    }
-    navigate(key);
+  const menuByRole = {
+    super_admin: [{ key: "/companies", icon: <ApartmentOutlined />, label: "Companies" }],
+    admin: [
+      { key: "/dashboard", icon: <DashboardOutlined />, label: "Dashboard" },
+      { key: "/customers", icon: <UserOutlined />, label: "Customers" },
+      { key: "/vendors", icon: <TeamOutlined />, label: "Vendors" },
+      { key: "/purchases", icon: <ShoppingCartOutlined />, label: "Purchases" },
+      { key: "/products", icon: <ShoppingOutlined />, label: "Products" },
+      { key: "/sales", icon: <FileTextOutlined />, label: "Sales" },
+      { key: "/invoices", icon: <FileTextOutlined />, label: "Invoices" },
+      { key: "/payments", icon: <DollarOutlined />, label: "Payments" },
+      { key: "/reports", icon: <BarChartOutlined />, label: "Reports" },
+      {
+        key: "/chat",
+        icon: <MessageOutlined />,
+        label: (
+          <Badge dot={chatUnreadTotal > 0} offset={[6, 0]}>
+            <span>Chat Support</span>
+          </Badge>
+        ),
+      },
+    ],
+    vendor: [
+      { key: "/purchases", icon: <ShoppingCartOutlined />, label: "My Purchases" },
+      { key: "/invoices", icon: <FileTextOutlined />, label: "My Invoices" },
+      {
+        key: "/chat",
+        icon: <MessageOutlined />,
+        label: (
+          <Badge dot={chatUnreadTotal > 0} offset={[6, 0]}>
+            <span>Chat Support</span>
+          </Badge>
+        ),
+      },
+    ],
+    customer: [
+      { key: "/sales", icon: <FileTextOutlined />, label: "My Purchases" },
+      { key: "/invoices", icon: <FileTextOutlined />, label: "My Invoices" },
+      {
+        key: "/chat",
+        icon: <MessageOutlined />,
+        label: (
+          <Badge dot={chatUnreadTotal > 0} offset={[6, 0]}>
+            <span>Chat Support</span>
+          </Badge>
+        ),
+      },
+    ],
   };
 
+  const menuItems = menuByRole[user?.role] || menuByRole.customer;
+
   return (
-    <Menu
-      theme={darkMode ? 'dark' : 'light'}
-      mode="inline"
-      selectedKeys={[location.pathname]}
-      onClick={onMenuClick}
+    <div
       style={{
-        background: darkMode ? '#1e293b' : '#ffffff',
-        borderRight: darkMode ? '1px solid #334155' : '1px solid #e2e8f0'
+        display: "flex",
+        flexDirection: "column",
+        height: "calc(100vh - 72px)",
       }}
-      items={[
-        ...menuItems,
-        { key: 'logout', icon: <LogoutOutlined style={{ color: darkMode ? '#cbd5e1' : '#1890ff' }} />, label: 'Logout' }
-      ]}
-    />
+    >
+      <Menu
+        theme={darkMode ? "dark" : "light"}
+        mode="inline"
+        inlineCollapsed={collapsed}
+        selectedKeys={[selectedPath]}
+        onClick={({ key }) => navigate(key)}
+        style={{
+          flex: 1,
+          minHeight: 0,
+          background: "transparent",
+          borderRight: "none",
+          padding: collapsed ? "12px 8px" : "12px 10px",
+          overflowY: "auto",
+        }}
+        items={menuItems}
+      />
+
+      <div
+        style={{
+          padding: collapsed ? 12 : 16,
+          borderTop: "1px solid var(--papertech-border)",
+          display: "grid",
+          gap: 10,
+          background: "color-mix(in srgb, var(--papertech-surface) 92%, transparent)",
+        }}
+      >
+        <Button
+          block
+          type="text"
+          icon={<LockOutlined />}
+          onClick={() => onChangePasswordRequest?.()}
+          style={{
+            justifyContent: collapsed ? "center" : "flex-start",
+            color: "var(--papertech-text)",
+          }}
+        >
+          {collapsed ? null : "Change Password"}
+        </Button>
+        <Button
+          block
+          danger
+          type="text"
+          icon={<LogoutOutlined />}
+          onClick={() => onLogoutRequest?.()}
+          style={{
+            justifyContent: collapsed ? "center" : "flex-start",
+          }}
+        >
+          {collapsed ? null : "Logout"}
+        </Button>
+      </div>
+    </div>
   );
 }
 

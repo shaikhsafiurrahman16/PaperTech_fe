@@ -1,55 +1,36 @@
-﻿﻿import { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { App, Button, Card, ConfigProvider, Form, Input, Space, Switch, Typography, theme } from "antd";
 import {
-  Form,
-  Input,
-  Button,
-  Typography,
-  ConfigProvider,
-  theme,
-  App,
-  Switch,
-} from "antd";
-import {
-  LockOutlined,
-  UserOutlined,
-  MoonOutlined,
-  SunOutlined,
-  ThunderboltFilled,
-  SafetyCertificateFilled,
-  TeamOutlined,
   ArrowRightOutlined,
   BarChartOutlined,
-  FileTextOutlined,
+  LockOutlined,
+  MoonOutlined,
+  SafetyCertificateFilled,
+  SunOutlined,
+  ThunderboltFilled,
   DatabaseOutlined,
+  TeamOutlined,
+  UserOutlined,
+  WalletOutlined,
 } from "@ant-design/icons";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosConfig";
 import { loginSuccess } from "../../store/authSlice";
+import { useAppTheme } from "../../theme/AppThemeContext";
 
-const { Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 
 function Login() {
   const { message } = App.useApp();
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { darkMode, setDarkMode } = useAppTheme();
   const [loading, setLoading] = useState(false);
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
-  const primaryBrandColor = "#7f6bff";
-
-  const [darkMode, setDarkMode] = useState(() => {
-    const savedMode = localStorage.getItem("papertech_darkMode");
-    return savedMode === null ? true : savedMode === "true";
-  });
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 1100);
 
   useEffect(() => {
-    localStorage.setItem("papertech_darkMode", String(darkMode));
-    document.documentElement.classList.toggle("dark", darkMode);
-    document.body.classList.toggle("dark", darkMode);
-  }, [darkMode]);
-
-  useEffect(() => {
-    const onResize = () => setIsMobile(window.innerWidth < 992);
+    const onResize = () => setIsMobile(window.innerWidth < 1100);
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
   }, []);
@@ -64,14 +45,18 @@ function Login() {
           user: response.data.data,
         }),
       );
-      message.success("Login Successful");
+      message.success("Welcome back");
       const role = response.data.data.role;
-      const nextPath = role === "super_admin" ? "/companies" : role === "customer" ? "/sales" : role === "vendor" ? "/purchases" : "/dashboard";
-      navigate(nextPath, {
-        replace: true,
-      });
+      const nextPath =
+        role === "super_admin"
+          ? "/companies"
+          : role === "customer"
+            ? "/sales"
+            : role === "vendor"
+              ? "/purchases"
+              : "/dashboard";
+      navigate(nextPath, { replace: true });
     } catch (error) {
-      console.log(error);
       message.error(error.response?.data?.message || "Login failed");
     } finally {
       setLoading(false);
@@ -80,53 +65,87 @@ function Login() {
 
   const themeConfig = {
     token: {
-      colorPrimary: primaryBrandColor,
-      colorBgBase: darkMode ? "#0f172a" : "#ffffff",
-      colorTextBase: darkMode ? "#f1f5f9" : "#1e293b",
-      borderRadius: 12,
-      controlHeight: 45,
+      colorPrimary: "#5b52d9",
+      colorBgBase: darkMode ? "#07111f" : "#eef2ff",
+      colorTextBase: darkMode ? "#e5eef9" : "#0f172a",
+      borderRadius: 16,
+      controlHeight: 46,
+      fontFamily:
+        'Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
     },
     algorithm: darkMode ? theme.darkAlgorithm : theme.defaultAlgorithm,
   };
 
+  const featureCards = [
+    {
+      icon: <ThunderboltFilled />,
+      title: "Fast Operations",
+      text: "Built for quick workflows and low-friction daily use.",
+    },
+    {
+      icon: <BarChartOutlined />,
+      title: "Live Insights",
+      text: "Dashboards and reports designed for decision making.",
+    },
+    {
+      icon: <WalletOutlined />,
+      title: "Clean Finance",
+      text: "Invoices, payments, and ledgers in one place.",
+    },
+    {
+      icon: <DatabaseOutlined />, 
+      title: "Smart Inventory",
+      text: "Real-time stock tracking and automated reorder alerts.",
+    },
+    {
+      icon: <LockOutlined />, 
+      title: "Secure Data",
+      text: "Enterprise-grade security and automated daily backups.",
+    },
+    {
+      icon: <TeamOutlined />,
+      title: "Easy Collaboration",
+      text: "Multi-user access with customizable roles and permissions.",
+    },
+  ];
+
   return (
     <ConfigProvider theme={themeConfig}>
       <div
+        className="papertech-fade-in"
         style={{
           minHeight: "100vh",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: 0,
-          background: darkMode
-            ? "radial-gradient(circle at 20% 20%, #2a1b7f 0%, #060d30 50%, #04081f 100%)"
-            : "radial-gradient(circle at 20% 20%, #d9dcff 0%, #f4f7ff 52%, #eef2ff 100%)",
-          transition: "all 0.5s ease",
+          padding: isMobile ? 16 : 28,
+          background:
+            darkMode
+              ? "radial-gradient(circle at top left, rgba(91, 82, 217, 0.28), transparent 26%), radial-gradient(circle at 85% 10%, rgba(34, 197, 94, 0.16), transparent 24%), linear-gradient(135deg, #050b16 0%, #07111f 48%, #0b1528 100%)"
+              : "radial-gradient(circle at top left, rgba(91, 82, 217, 0.16), transparent 26%), radial-gradient(circle at 85% 10%, rgba(34, 197, 94, 0.12), transparent 24%), linear-gradient(135deg, #f7f8ff 0%, #eef2ff 48%, #ffffff 100%)",
+          display: "grid",
+          alignItems: "stretch",
         }}
       >
         <div
+          className="papertech-glass-strong"
           style={{
-            width: "100vw",
-            minHeight: "100vh",
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1.05fr 1fr",
+            minHeight: "calc(100vh - 56px)",
+            borderRadius: 32,
             overflow: "hidden",
-            background: darkMode
-              ? "linear-gradient(135deg, #020617 0%, #0b112d 45%, #120c35 100%)"
-              : "linear-gradient(135deg, #eef2ff 0%, #f8faff 45%, #ffffff 100%)",
+            display: "grid",
+            gridTemplateColumns: isMobile ? "1fr" : "1.05fr 0.95fr",
           }}
         >
           <div
             style={{
-              padding: isMobile ? "22px 18px" : "34px 38px",
+              padding: isMobile ? 28 : 42,
               position: "relative",
-              color: darkMode ? "#f8f9ff" : "#111827",
-              background: darkMode
-                ? "radial-gradient(circle at 40% 20%, rgba(116, 85, 255, 0.24), transparent 58%)"
-                : "radial-gradient(circle at 40% 20%, rgba(109, 93, 255, 0.18), transparent 58%)",
+              overflow: "hidden",
               display: "flex",
               flexDirection: "column",
-              overflow: "hidden",
+              justifyContent: "space-between",
+              background:
+                darkMode
+                  ? "linear-gradient(180deg, rgba(12, 20, 41, 0.92), rgba(7, 17, 31, 0.92))"
+                  : "linear-gradient(180deg, rgba(255,255,255,0.92), rgba(246,248,255,0.92))",
             }}
           >
             <div
@@ -134,420 +153,194 @@ function Login() {
                 position: "absolute",
                 inset: 0,
                 background:
-                  "radial-gradient(circle at center, rgba(117, 92, 255, 0.14), transparent 55%)",
+                  "radial-gradient(circle at 18% 22%, rgba(91, 82, 217, 0.18), transparent 28%), radial-gradient(circle at 85% 68%, rgba(16, 185, 129, 0.12), transparent 24%)",
                 pointerEvents: "none",
               }}
             />
 
-            <div
-              style={{
-                position: "absolute",
-                width: 520,
-                height: 520,
-                borderRadius: "50%",
-                border: "2px solid rgba(143, 118, 255, 0.28)",
-                top: "50%",
-                left: "52%",
-                transform: "translate(-50%, -50%) rotate(-12deg)",
-                boxShadow: "0 0 80px rgba(116, 85, 255, 0.25)",
-              }}
-            />
-
-            <div
-              style={{
-                position: "relative",
-                zIndex: 2,
-                fontSize: isMobile ? 24 : 28,
-                fontWeight: 800,
-                letterSpacing: "-0.8px",
-                color: primaryBrandColor,
-                marginBottom: 48,
-                marginTop: isMobile ? 12 : 10,
-              }}
-            >
-              PAPER<span style={{ opacity: 0.8 }}>TECH</span>
-            </div>
-
-            <h1
-              style={{
-                position: "relative",
-                zIndex: 2,
-                fontSize: isMobile ? 30 : 48,
-                lineHeight: "1.08",
-                margin: 0,
-                marginBottom: 30,
-                maxWidth: isMobile ? "100%" : 470,
-              }}
-            >
-              Smarter Workflow.
-              <br />
-              Better{" "}
-              <span
-                style={{
-                  color: primaryBrandColor,
-                  textShadow: "0 0 22px rgba(127, 107, 255, 0.45)",
-                }}
-              >
-                Results.
-              </span>
-            </h1>
-
-            <Text
-              style={{
-                position: "relative",
-                zIndex: 2,
-                fontSize: isMobile ? 15 : 18,
-                maxWidth: 480,
-                color: darkMode ? "#b8c1ea" : "#5b627f",
-              }}
-            >
-              PaperTech helps your team manage documents, collaborate faster, and keep
-              operations in one place.
-            </Text>
-
-            <div
-              style={{
-                position: "absolute",
-                right: isMobile ? "-20%" : "4%",
-                top: "18%",
-                width: isMobile ? 260 : 520,
-                height: isMobile ? 260 : 520,
-                opacity: 0.9,
-                zIndex: 1,
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  borderRadius: 28,
-                  background: "rgba(98, 87, 255, 0.1)",
-                  border: "1px solid rgba(152, 130, 255, 0.18)",
-                  transform: "rotate(-8deg)",
-                  backdropFilter: "blur(8px)",
-                }}
-              />
-
-              <div
-                style={{
-                  position: "absolute",
-                  top: 40,
-                  left: 40,
-                  right: 40,
-                  height: 120,
-                  borderRadius: 22,
-                  background: "rgba(116, 85, 255, 0.12)",
-                  border: "1px solid rgba(155, 133, 255, 0.22)",
-                  transform: "rotate(6deg)",
-                }}
-              />
-
-              <div
-                style={{
-                  position: "absolute",
-                  bottom: 50,
-                  left: 70,
-                  width: 220,
-                  height: 220,
-                  borderRadius: 22,
-                  background: "rgba(116, 85, 255, 0.14)",
-                  border: "1px solid rgba(155, 133, 255, 0.22)",
-                }}
-              />
-            </div>
-
-            <div
-              style={{
-                position: "relative",
-                zIndex: 2,
-                marginTop: isMobile ? 24 : 44,
-                display: "flex",
-                flexDirection: "column",
-                gap: 16,
-              }}
-            >
-              {[
-                {
-                  icon: <ThunderboltFilled />,
-                  title: "Fast & Efficient",
-                  desc: "Automate repetitive tasks and save valuable time.",
-                },
-                {
-                  icon: <SafetyCertificateFilled />,
-                  title: "Secure & Reliable",
-                  desc: "Enterprise-grade security to keep your data protected.",
-                },
-                {
-                  icon: <TeamOutlined />,
-                  title: "Team Collaboration",
-                  desc: "Work together seamlessly and achieve more.",
-                },
-                {
-                  icon: <DatabaseOutlined />,
-                  title: "Smart Inventory",
-                  desc: "Track stock, manage inventory, and monitor movements in real time.",
-                },
-                {
-                  icon: <BarChartOutlined />,
-                  title: "Advanced Analytics",
-                  desc: "Get detailed reports and insights to make better business decisions.",
-                },
-              ].map((item) => (
+            <div style={{ position: "relative", zIndex: 1 }}>
+              <Space direction="vertical" size={18} style={{ width: "100%" }}>
                 <div
-                  key={item.title}
-                  style={{ display: "flex", alignItems: "flex-start", gap: 12 }}
-                >
-                  <div
-                    style={{
-                      width: 42,
-                      height: 42,
-                      borderRadius: 10,
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      fontSize: 18,
-                      color: "#a08bff",
-                      background: darkMode
-                        ? "rgba(106, 87, 255, 0.16)"
-                        : "rgba(106, 87, 255, 0.12)",
-                      border: "1px solid rgba(120, 100, 255, 0.25)",
-                    }}
-                  >
-                    {item.icon}
-                  </div>
-
-                  <div style={{ marginBottom: 40 }}>
-                    <div
-                      style={{
-                        fontSize: isMobile ? 18 : 22,
-                        fontWeight: 700,
-                        marginBottom: 2,
-                      }}
-                    >
-                      {item.title}
-                    </div>
-
-                    <Text
-                      style={{
-                        color: darkMode ? "#9fa8d6" : "#66708f",
-                        fontSize: isMobile ? 14 : 16,
-                      }}
-                    >
-                      {item.desc}
-                    </Text>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div
-            style={{
-              padding: isMobile ? "40px 18px" : "60px 38px",
-              display: "flex",
-              flexDirection: "column",
-              justifyContent: "space-between",
-              background: darkMode
-                ? "rgba(6, 15, 48, 0.82)"
-                : "rgba(250, 252, 255, 0.9)",
-              backdropFilter: "blur(18px)",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "flex-end" }}>
-              <div
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  gap: 10,
-                  fontSize: 13,
-                }}
-              >
-                <Text
                   style={{
-                    color: darkMode ? "#c4cbec" : "#4b5478",
-                    margin: 0,
-                    fontSize: 13,
+                    width: 58,
+                    height: 58,
+                    borderRadius: 18,
+                    display: "grid",
+                    placeItems: "center",
+                    color: "#fff",
+                    fontWeight: 900,
+                    letterSpacing: 1,
+                    background: "linear-gradient(135deg, #5b52d9 0%, #10b981 100%)",
+                    boxShadow: "0 18px 40px rgba(91, 82, 217, 0.28)",
                   }}
                 >
-                  {darkMode ? "Dark Mode" : "Light Mode"}
-                </Text>
+                  P
+                </div>
+                <div>
+                  <Title level={1} style={{ margin: 0, lineHeight: 1.02, letterSpacing: -1.2 }}>
+                    PaperTech
+                  </Title>
+                  <Paragraph
+                    style={{
+                      marginTop: 12,
+                      marginBottom: 0,
+                      maxWidth: 560,
+                      fontSize: 16,
+                      color: "var(--papertech-text-muted)",
+                    }}
+                  >
+                    Manage sales, invoices, payments, vendors, and customers from a
+                    polished desktop experience.
+                  </Paragraph>
+                </div>
+              </Space>
 
-                <Switch
-                  checked={darkMode}
-                  onChange={setDarkMode}
-                  checkedChildren={<MoonOutlined />}
-                  unCheckedChildren={<SunOutlined />}
-                  style={{ background: darkMode ? "#5449d8" : "#9aa4ff" }}
-                />
+              <div
+                style={{
+                  marginTop: isMobile ? 28 : 44,
+                  display: "grid",
+                  gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+                  gap: 14,
+                }}
+              >
+                {featureCards.map((item) => (
+                  <Card
+                    key={item.title}
+                    bordered={false}
+                    className="papertech-glass"
+                    style={{
+                      borderRadius: 22,
+                      minHeight: 132,
+                      background:
+                        "linear-gradient(180deg, color-mix(in srgb, var(--papertech-primary) 8%, var(--papertech-surface-strong)) 0%, var(--papertech-surface) 100%)",
+                    }}
+                  >
+                    <div style={{ color: "#5b52d9", fontSize: 20, marginBottom: 12 }}>
+                      {item.icon}
+                    </div>
+                    <Title level={5} style={{ margin: 0 }}>
+                      {item.title}
+                    </Title>
+                    <Text type="secondary">{item.text}</Text>
+                  </Card>
+                ))}
               </div>
             </div>
 
             <div
               style={{
-                maxWidth: 460,
-                width: "100%",
-                margin: "0 auto",
-              }}
-            >
-              <h2
-                style={{
-                  fontSize: isMobile ? 28 : 38,
-                  marginBottom: 4,
-                  color: darkMode ? "#f3f5ff" : "#141938",
-                }}
-              >
-                Welcome Back
-              </h2>
-
-              <Text
-                style={{
-                  fontSize: isMobile ? 15 : 17,
-                  color: darkMode ? "#9ca7d6" : "#6d7495",
-                }}
-              >
-                Sign in to continue to your account
-              </Text>
-
-              <Form
-                layout="vertical"
-                onFinish={onFinish}
-                requiredMark={false}
-                style={{ marginTop: 24 }}
-              >
-                <Form.Item
-                  label={
-                    <span
-                      style={{
-                        color: darkMode ? "#e6ebff" : "#1c2242",
-                        fontSize: 16,
-                      }}
-                    >
-                      Username
-                    </span>
-                  }
-                  name="username"
-                  rules={[{ required: true, message: "Username is required" }]}
-                >
-                  <Input
-                    prefix={
-                      <UserOutlined
-                        style={{ color: primaryBrandColor, marginRight: 8 }}
-                      />
-                    }
-                    placeholder="Enter your username"
-                    style={{
-                      height: 48,
-                      borderRadius: 10,
-                      fontSize: 15,
-                      background: darkMode
-                        ? "rgba(11, 23, 71, 0.7)"
-                        : "#ffffff",
-                      border: darkMode
-                        ? "1px solid rgba(98, 118, 214, 0.35)"
-                        : "1px solid rgba(130, 141, 206, 0.4)",
-                    }}
-                  />
-                </Form.Item>
-
-                <Form.Item
-                  label={
-                    <span
-                      style={{
-                        color: darkMode ? "#e6ebff" : "#1c2242",
-                        fontSize: 16,
-                      }}
-                    >
-                      Password
-                    </span>
-                  }
-                  name="password"
-                  rules={[{ required: true, message: "Password is required" }]}
-                  style={{ marginBottom: 10 }}
-                >
-                  <Input.Password
-                    prefix={
-                      <LockOutlined
-                        style={{ color: primaryBrandColor, marginRight: 8 }}
-                      />
-                    }
-                    placeholder="Enter your password"
-                    style={{
-                      height: 48,
-                      borderRadius: 10,
-                      fontSize: 15,
-                      background: darkMode
-                        ? "rgba(11, 23, 71, 0.7)"
-                        : "#ffffff",
-                      border: darkMode
-                        ? "1px solid rgba(98, 118, 214, 0.35)"
-                        : "1px solid rgba(130, 141, 206, 0.4)",
-                    }}
-                  />
-                </Form.Item>
-
-                <div style={{ textAlign: "right", marginBottom: 22 }}>
-                  <Button
-                    type="link"
-                    size="small"
-                    style={{
-                      color: primaryBrandColor,
-                      fontSize: 15,
-                      padding: 0,
-                    }}
-                  >
-                    Forgot Password?
-                  </Button>
-                </div>
-
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  block
-                  loading={loading}
-                  style={{
-                    height: 50,
-                    borderRadius: 12,
-                    fontWeight: 700,
-                    fontSize: 18,
-                    background: "linear-gradient(135deg, #9777ff, #5f78ff)",
-                    boxShadow: "0 14px 28px rgba(104, 105, 255, 0.34)",
-                    border: "none",
-                    marginTop: 6,
-                  }}
-                >
-                  <span
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 8,
-                    }}
-                  >
-                    Sign In <ArrowRightOutlined />
-                  </span>
-                </Button>
-              </Form>
-            </div>
-
-            <div
-              style={{
+                marginTop: 28,
                 display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 16,
+                flexWrap: "wrap",
+                position: "relative",
+                zIndex: 1,
               }}
             >
-              <Text
+              <div>
+                <Text type="secondary">Mode</Text>
+                <div style={{ marginTop: 8 }}>
+                  <Switch
+                    checked={darkMode}
+                    onChange={setDarkMode}
+                    checkedChildren={<MoonOutlined />}
+                    unCheckedChildren={<SunOutlined />}
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              padding: isMobile ? 24 : 44,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background:
+                darkMode
+                  ? "linear-gradient(180deg, rgba(7, 17, 31, 0.92), rgba(11, 21, 40, 0.92))"
+                  : "linear-gradient(180deg, rgba(255,255,255,0.94), rgba(248,250,255,0.92))",
+            }}
+          >
+            <div style={{ width: "100%", maxWidth: 440 }}>
+              <Card
+                bordered={false}
+                className="papertech-glass-strong"
                 style={{
-                  fontSize: 12,
-                  color: darkMode ? "#6170ac" : "#9ba5c5",
+                  borderRadius: 28,
+                  padding: 4,
                 }}
               >
-                © 2026 PaperTech Solutions. All rights reserved.
-              </Text>
+                <div style={{ padding: isMobile ? 22 : 30 }}>
+                  <Title level={2} style={{ marginTop: 0, marginBottom: 8 }}>
+                    Welcome back
+                  </Title>
+                  <Text type="secondary">
+                    Sign in to continue to your secure workspace.
+                  </Text>
+
+                  <Form
+                    layout="vertical"
+                    requiredMark={false}
+                    onFinish={onFinish}
+                    style={{ marginTop: 28 }}
+                  >
+                    <Form.Item
+                      label="Username"
+                      name="username"
+                      rules={[{ required: true, message: "Username is required" }]}
+                    >
+                      <Input
+                        size="large"
+                        prefix={<UserOutlined style={{ color: "#5b52d9" }} />}
+                        placeholder="Enter your username"
+                      />
+                    </Form.Item>
+
+                    <Form.Item
+                      label="Password"
+                      name="password"
+                      rules={[{ required: true, message: "Password is required" }]}
+                    >
+                      <Input.Password
+                        size="large"
+                        prefix={<LockOutlined style={{ color: "#5b52d9" }} />}
+                        placeholder="Enter your password"
+                      />
+                    </Form.Item>
+
+                    <Form.Item style={{ marginBottom: 14 }}>
+                      <Button
+                        type="primary"
+                        htmlType="submit"
+                        loading={loading}
+                        block
+                        size="large"
+                        style={{ height: 48 }}
+                      >
+                        Sign In <ArrowRightOutlined />
+                      </Button>
+                    </Form.Item>
+                  </Form>
+
+                  {/* <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      gap: 12,
+                      flexWrap: "wrap",
+                      color: "var(--papertech-text-muted)",
+                      fontSize: 12,
+                    }}
+                  >
+                  </div> */}
+                </div>
+              </Card>
             </div>
           </div>
         </div>
-
-
       </div>
     </ConfigProvider>
   );

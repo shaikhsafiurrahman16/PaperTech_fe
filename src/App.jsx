@@ -3,13 +3,6 @@ import { useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { message } from 'antd';
 import Login from './pages/auth/Login';
-import AdminDashboard from './pages/dashboard/AdminDashboard';
-import CustomerList from './pages/customers/CustomerList';
-import ProductList from './pages/products/ProductList';
-import SalesHistory from './pages/sales/SalesHistory';
-import PaymentList from './pages/payments/F.jsx';
-import Reports from './pages/reports/Reports';
-import LedgerView from './pages/ledger/LedgerView';
 import DashboardLayout from './components/layout/DashboardLayout';
 
 function getHomePath(user) {

@@ -436,6 +436,8 @@ function VendorList() {
             pagination={{ pageSize: 15, showSizeChanger: true }}
             scroll={{ x: 1100 }}
             bordered
+            sticky
+            className="papertech-table-wrapper"
           />
         </Spin>
       </Card>
@@ -580,6 +582,8 @@ function VendorList() {
             pagination={{ pageSize: 10 }}
             scroll={{ x: 800 }}
             bordered
+            sticky
+            className="papertech-table-wrapper"
           />
         </Spin>
       </Drawer>
