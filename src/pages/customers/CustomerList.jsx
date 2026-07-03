@@ -29,6 +29,7 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import api from "../../api/axiosConfig";
+import usePermissions from "../../hooks/usePermissions";
 
 const formatMoney = (value) => `Rs. ${Number(value ?? 0).toFixed(2)}`;
 
@@ -40,6 +41,7 @@ function CustomerList() {
   const [pageLoading, setPageLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [form] = Form.useForm();
+  const { canCreate, canUpdate, canDelete } = usePermissions("customers");
 
   const fetchCustomers = async () => {
     try {
@@ -236,40 +238,44 @@ function CustomerList() {
         </span>
       ),
     },
-    {
+    (canUpdate || canDelete) ? {
       title: "Action",
       key: "action",
       width: 96,
       fixed: "right",
       render: (_, record) => (
         <Space>
-          <Tooltip title="Edit customer">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              size="small"
-              onClick={() => handleEditCustomer(record)}
-            />
-          </Tooltip>
-          <Popconfirm
-            title="Are you sure you want to delete this customer?"
-            onConfirm={() => handleDeleteCustomer(record.id)}
-            okText="Delete"
-            cancelText="Cancel"
-          >
-            <Tooltip title="Delete customer">
+          {canUpdate ? (
+            <Tooltip title="Edit customer">
               <Button
                 type="text"
-                danger
-                icon={<DeleteOutlined />}
+                icon={<EditOutlined />}
                 size="small"
+                onClick={() => handleEditCustomer(record)}
               />
             </Tooltip>
-          </Popconfirm>
+          ) : null}
+          {canDelete ? (
+            <Popconfirm
+              title="Are you sure you want to delete this customer?"
+              onConfirm={() => handleDeleteCustomer(record.id)}
+              okText="Delete"
+              cancelText="Cancel"
+            >
+              <Tooltip title="Delete customer">
+                <Button
+                  type="text"
+                  danger
+                  icon={<DeleteOutlined />}
+                  size="small"
+                />
+              </Tooltip>
+            </Popconfirm>
+          ) : null}
         </Space>
       ),
-    },
-  ];
+    } : null,
+  ].filter(Boolean);
 
   const starCustomers = customers.filter(
     (c) => c.customer_type === "star",
@@ -357,15 +363,17 @@ function CustomerList() {
             style={{ maxWidth: 360, flex: "1 1 280px" }}
           />
           <Space wrap style={{ justifyContent: "flex-end" }}>
-            <Tooltip title="Add a new customer">
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={handleCreateCustomer}
-              >
-                Add New Customer
-              </Button>
-            </Tooltip>
+            {canCreate ? (
+              <Tooltip title="Add a new customer">
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={handleCreateCustomer}
+                >
+                  Add New Customer
+                </Button>
+              </Tooltip>
+            ) : null}
             <Tooltip title="Export visible customers to Excel">
               <Button
                 icon={<FileExcelOutlined />}

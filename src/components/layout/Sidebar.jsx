@@ -2,19 +2,23 @@ import { Badge, Button, Menu } from "antd";
 import {
   ApartmentOutlined,
   BarChartOutlined,
+  ControlOutlined,
   DashboardOutlined,
   DollarOutlined,
   FileTextOutlined,
   LockOutlined,
   MessageOutlined,
+  SafetyCertificateOutlined,
   ShoppingCartOutlined,
   ShoppingOutlined,
   TeamOutlined,
   UserOutlined,
+  UsergroupAddOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import { hasModuleAccess } from "../../utils/accessModules";
 
 function Sidebar({
   darkMode,
@@ -30,21 +34,67 @@ function Sidebar({
     ? location.hash.replace(/^#/, "") || "/dashboard"
     : location.pathname;
   const selectedPath = currentPath.startsWith("/invoices/") ? "/invoices" : currentPath;
+  const defaultOpenKeys = currentPath.startsWith("/admin") || currentPath.startsWith("/companies")
+    ? ["admin-console"]
+    : currentPath === "/users"
+      ? ["admin-console"]
+      : [];
 
   const menuByRole = {
-    super_admin: [{ key: "/companies", icon: <ApartmentOutlined />, label: "Companies" }],
+    super_admin: [
+      {
+        key: "admin-console",
+        icon: <ControlOutlined />,
+        label: "Admin Console",
+        children: [
+          { key: "/companies", icon: <ApartmentOutlined />, label: "Companies" },
+          { key: "/admin/policies", icon: <SafetyCertificateOutlined />, label: "Policies" },
+        ],
+      },
+    ],
     admin: [
-      { key: "/dashboard", icon: <DashboardOutlined />, label: "Dashboard" },
-      { key: "/customers", icon: <UserOutlined />, label: "Customers" },
-      { key: "/vendors", icon: <TeamOutlined />, label: "Vendors" },
-      { key: "/purchases", icon: <ShoppingCartOutlined />, label: "Purchases" },
-      { key: "/products", icon: <ShoppingOutlined />, label: "Products" },
-      { key: "/sales", icon: <FileTextOutlined />, label: "Sales" },
-      { key: "/invoices", icon: <FileTextOutlined />, label: "Invoices" },
-      { key: "/payments", icon: <DollarOutlined />, label: "Payments" },
-      { key: "/reports", icon: <BarChartOutlined />, label: "Reports" },
+      { key: "/dashboard", module: "dashboard", icon: <DashboardOutlined />, label: "Dashboard" },
+      {
+        key: "admin-console",
+        icon: <ControlOutlined />,
+        label: "Admin Console",
+        children: [
+          { key: "/users", module: "users", icon: <UsergroupAddOutlined />, label: "Users" },
+          { key: "/admin/policies", icon: <SafetyCertificateOutlined />, label: "Policies" },
+        ],
+      },
+      { key: "/customers", module: "customers", icon: <UserOutlined />, label: "Customers" },
+      { key: "/vendors", module: "vendors", icon: <TeamOutlined />, label: "Vendors" },
+      { key: "/purchases", module: "purchases", icon: <ShoppingCartOutlined />, label: "Purchases" },
+      { key: "/products", module: "products", icon: <ShoppingOutlined />, label: "Products" },
+      { key: "/sales", module: "sales", icon: <FileTextOutlined />, label: "Sales" },
+      { key: "/invoices", module: "invoices", icon: <FileTextOutlined />, label: "Invoices" },
+      { key: "/payments", module: "payments", icon: <DollarOutlined />, label: "Payments" },
+      { key: "/reports", module: "reports", icon: <BarChartOutlined />, label: "Reports" },
       {
         key: "/chat",
+        module: "chat",
+        icon: <MessageOutlined />,
+        label: (
+          <Badge dot={chatUnreadTotal > 0} offset={[6, 0]}>
+            <span>Chat Support</span>
+          </Badge>
+        ),
+      },
+    ],
+    company_user: [
+      { key: "/dashboard", module: "dashboard", icon: <DashboardOutlined />, label: "Dashboard" },
+      { key: "/customers", module: "customers", icon: <UserOutlined />, label: "Customers" },
+      { key: "/vendors", module: "vendors", icon: <TeamOutlined />, label: "Vendors" },
+      { key: "/purchases", module: "purchases", icon: <ShoppingCartOutlined />, label: "Purchases" },
+      { key: "/products", module: "products", icon: <ShoppingOutlined />, label: "Products" },
+      { key: "/sales", module: "sales", icon: <FileTextOutlined />, label: "Sales" },
+      { key: "/invoices", module: "invoices", icon: <FileTextOutlined />, label: "Invoices" },
+      { key: "/payments", module: "payments", icon: <DollarOutlined />, label: "Payments" },
+      { key: "/reports", module: "reports", icon: <BarChartOutlined />, label: "Reports" },
+      {
+        key: "/chat",
+        module: "chat",
         icon: <MessageOutlined />,
         label: (
           <Badge dot={chatUnreadTotal > 0} offset={[6, 0]}>
@@ -81,7 +131,18 @@ function Sidebar({
     ],
   };
 
-  const menuItems = menuByRole[user?.role] || menuByRole.customer;
+  const menuItems = (menuByRole[user?.role] || menuByRole.customer)
+    .map((item) => {
+      if (item.children) {
+        const children = item.children.filter((child) => hasModuleAccess(user, child.module));
+        if (!children.length) {
+          return null;
+        }
+        return { ...item, children };
+      }
+      return hasModuleAccess(user, item.module) ? item : null;
+    })
+    .filter(Boolean);
 
   return (
     <div
@@ -96,6 +157,7 @@ function Sidebar({
         mode="inline"
         inlineCollapsed={collapsed}
         selectedKeys={[selectedPath]}
+        defaultOpenKeys={defaultOpenKeys}
         onClick={({ key }) => navigate(key)}
         style={{
           flex: 1,

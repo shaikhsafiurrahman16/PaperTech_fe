@@ -30,6 +30,7 @@ import api from "../../api/axiosConfig";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import usePermissions from "../../hooks/usePermissions";
 
 const PAPER_TYPE_OPTIONS = [
   "carbon",
@@ -89,6 +90,7 @@ function ProductList() {
   const [form] = Form.useForm();
   const [searchTerm, setSearchTerm] = useState("");
   const selectedUnitType = Form.useWatch("unit_type", form);
+  const { canCreate, canUpdate, canDelete } = usePermissions("products");
 
   const fetchProducts = async () => {
     try {
@@ -305,34 +307,38 @@ function ProductList() {
         </Tag>
       ),
     },
-    {
+    (canUpdate || canDelete) ? {
       title: "Action",
       key: "action",
       width: 120,
       fixed: "right",
       render: (_, record) => (
         <Space>
-          <Tooltip title="Edit product">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              size="small"
-              onClick={() => handleEditProduct(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Delete product">
-            <Button
-              danger
-              type="text"
-              icon={<DeleteOutlined />}
-              size="small"
-              onClick={() => handleDeleteProduct(record.id)}
-            />
-          </Tooltip>
+          {canUpdate ? (
+            <Tooltip title="Edit product">
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                size="small"
+                onClick={() => handleEditProduct(record)}
+              />
+            </Tooltip>
+          ) : null}
+          {canDelete ? (
+            <Tooltip title="Delete product">
+              <Button
+                danger
+                type="text"
+                icon={<DeleteOutlined />}
+                size="small"
+                onClick={() => handleDeleteProduct(record.id)}
+              />
+            </Tooltip>
+          ) : null}
         </Space>
       ),
-    },
-  ];
+    } : null,
+  ].filter(Boolean);
 
   return (
     <div>
@@ -396,15 +402,17 @@ function ProductList() {
             style={{ maxWidth: 360, flex: "1 1 280px" }}
           />
           <Space wrap style={{ justifyContent: "flex-end" }}>
-            <Tooltip title="Add a new product">
-              <Button
-                type="primary"
-                icon={<PlusOutlined />}
-                onClick={handleOpenProductModal}
-              >
-                New Product
-              </Button>
-            </Tooltip>
+            {canCreate ? (
+              <Tooltip title="Add a new product">
+                <Button
+                  type="primary"
+                  icon={<PlusOutlined />}
+                  onClick={handleOpenProductModal}
+                >
+                  New Product
+                </Button>
+              </Tooltip>
+            ) : null}
 
             <Tooltip title="Export visible products to Excel">
               <Button icon={<FileExcelOutlined />} onClick={exportToExcel}>

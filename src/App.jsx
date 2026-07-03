@@ -4,12 +4,27 @@ import { useEffect } from 'react';
 import { message } from 'antd';
 import Login from './pages/auth/Login';
 import DashboardLayout from './components/layout/DashboardLayout';
+import { firstAllowedPath } from './utils/accessModules';
+
+const adminHomeRoutes = [
+  { path: '/dashboard', module: 'dashboard' },
+  { path: '/users', module: 'users' },
+  { path: '/customers', module: 'customers' },
+  { path: '/vendors', module: 'vendors' },
+  { path: '/purchases', module: 'purchases' },
+  { path: '/products', module: 'products' },
+  { path: '/sales', module: 'sales' },
+  { path: '/invoices', module: 'invoices' },
+  { path: '/payments', module: 'payments' },
+  { path: '/reports', module: 'reports' },
+  { path: '/chat', module: 'chat' },
+];
 
 function getHomePath(user) {
   if (user?.role === 'super_admin') return '/companies';
   if (user?.role === 'customer') return '/sales';
   if (user?.role === 'vendor') return '/purchases';
-  return '/dashboard';
+  return firstAllowedPath(user, adminHomeRoutes);
 }
 
 function PublicRoute({ children }) {

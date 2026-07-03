@@ -32,6 +32,7 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import api from "../../api/axiosConfig";
+import usePermissions from "../../hooks/usePermissions";
 
 const formatMoney = (value) => `Rs. ${Number(value ?? 0).toFixed(2)}`;
 
@@ -49,6 +50,8 @@ function VendorList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [vendorForm] = Form.useForm();
   const [paymentForm] = Form.useForm();
+  const { canCreate, canUpdate, canDelete } = usePermissions("vendors");
+  const { canCreate: canCreatePayment } = usePermissions("payments");
 
   const fetchVendors = async () => {
     try {
@@ -291,33 +294,39 @@ function VendorList() {
               onClick={() => openLedger(record)}
             />
           </Tooltip>
-          <Tooltip title="Pay vendor">
-            <Button
-              type="text"
-              icon={<WalletOutlined />}
-              size="small"
-              onClick={() => openPaymentDrawer(record)}
-              disabled={Number(record.current_balance || 0) <= 0}
-            />
-          </Tooltip>
-          <Tooltip title="Edit vendor">
-            <Button
-              type="text"
-              icon={<EditOutlined />}
-              size="small"
-              onClick={() => handleEditVendor(record)}
-            />
-          </Tooltip>
-          <Popconfirm
-            title="Are you sure you want to delete this vendor?"
-            onConfirm={() => handleDeleteVendor(record.id)}
-            okText="Delete"
-            cancelText="Cancel"
-          >
-            <Tooltip title="Delete vendor">
-              <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+          {canCreatePayment ? (
+            <Tooltip title="Pay vendor">
+              <Button
+                type="text"
+                icon={<WalletOutlined />}
+                size="small"
+                onClick={() => openPaymentDrawer(record)}
+                disabled={Number(record.current_balance || 0) <= 0}
+              />
             </Tooltip>
-          </Popconfirm>
+          ) : null}
+          {canUpdate ? (
+            <Tooltip title="Edit vendor">
+              <Button
+                type="text"
+                icon={<EditOutlined />}
+                size="small"
+                onClick={() => handleEditVendor(record)}
+              />
+            </Tooltip>
+          ) : null}
+          {canDelete ? (
+            <Popconfirm
+              title="Are you sure you want to delete this vendor?"
+              onConfirm={() => handleDeleteVendor(record.id)}
+              okText="Delete"
+              cancelText="Cancel"
+            >
+              <Tooltip title="Delete vendor">
+                <Button type="text" danger icon={<DeleteOutlined />} size="small" />
+              </Tooltip>
+            </Popconfirm>
+          ) : null}
         </Space>
       ),
     },
@@ -408,11 +417,13 @@ function VendorList() {
             style={{ maxWidth: 360, flex: "1 1 280px" }}
           />
           <Space wrap style={{ justifyContent: "flex-end" }}>
-            <Tooltip title="Add a new vendor">
-              <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateVendor}>
-                Add New Vendor
-              </Button>
-            </Tooltip>
+            {canCreate ? (
+              <Tooltip title="Add a new vendor">
+                <Button type="primary" icon={<PlusOutlined />} onClick={handleCreateVendor}>
+                  Add New Vendor
+                </Button>
+              </Tooltip>
+            ) : null}
             <Tooltip title="Export visible vendors to Excel">
               <Button icon={<FileExcelOutlined />} onClick={exportToExcel}>
                 Excel Export

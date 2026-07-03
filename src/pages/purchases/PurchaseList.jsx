@@ -22,6 +22,7 @@ import {
 import { EditOutlined, MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import api from "../../api/axiosConfig";
+import usePermissions from "../../hooks/usePermissions";
 
 const formatMoney = (value) => `Rs. ${Number(value ?? 0).toFixed(2)}`;
 const getSheetsPerPack = (product) => Number(product?.sheets_per_pack || 1) || 1;
@@ -39,20 +40,21 @@ function PurchaseList() {
   const [editingPurchase, setEditingPurchase] = useState(null);
   const [form] = Form.useForm();
   const { user } = useSelector((state) => state.auth);
-  const isAdmin = user?.role === "admin";
+  const isAdmin = user?.role === "admin" || user?.role === "company_user";
+  const { canCreate, canUpdate } = usePermissions("purchases");
 
   const fetchData = async (filters = {}) => {
     try {
       setPageLoading(true);
       const requests = [api.get("/purchases", { params: filters })];
-      if (isAdmin) {
+      if (isAdmin && (canCreate || canUpdate)) {
         requests.push(api.get("/vendors"));
         requests.push(api.get("/products"));
       }
       const responses = await Promise.all(requests);
       const purchasesRes = responses[0];
       setPurchases(purchasesRes.data.data || []);
-      if (isAdmin) {
+      if (isAdmin && (canCreate || canUpdate)) {
         setVendors(responses[1].data.data || []);
         setProducts(responses[2].data.data || []);
       } else {
@@ -68,7 +70,7 @@ function PurchaseList() {
 
   useEffect(() => {
     fetchData();
-  }, [isAdmin]);
+  }, [isAdmin, canCreate, canUpdate]);
 
   const applyFilters = () => {
     fetchData({
@@ -213,7 +215,7 @@ function PurchaseList() {
               Reset
             </Button>
           </Space>
-          {isAdmin && (
+          {isAdmin && canCreate && (
             <div style={{ marginLeft: "auto" }}>
               <Tooltip title="Create new purchase">
                 <Button
@@ -273,7 +275,7 @@ function PurchaseList() {
                 key: "created_at",
                 render: (value) => new Date(value).toLocaleDateString("en-US"),
               },
-              ...(isAdmin ? [{
+              ...(isAdmin && canUpdate ? [{
                 title: "Action",
                 key: "action",
                 width: 90,

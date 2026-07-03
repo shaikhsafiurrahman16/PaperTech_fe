@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Button, Card, Form, Input, Modal, Popconfirm, Space, Table, Typography, App, Tag } from 'antd';
+import { Button, Card, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag, App } from 'antd';
 import api from '../../api/axiosConfig';
 import PageHeader from '../../components/layout/PageHeader';
-
-const { Title } = Typography;
+import PolicyAssignSelect from '../../components/common/PolicyAssignSelect';
 
 function CompaniesPage() {
   const { message } = App.useApp();
@@ -12,9 +11,23 @@ function CompaniesPage() {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [companies, setCompanies] = useState([]);
+  const [adminPolicies, setAdminPolicies] = useState([]);
+  const [policiesLoading, setPoliciesLoading] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState(null);
+
+  const loadPolicies = async () => {
+    try {
+      setPoliciesLoading(true);
+      const response = await api.get('/policies');
+      setAdminPolicies(response.data?.data || []);
+    } catch (error) {
+      message.error(error.response?.data?.message || 'Failed to load policies');
+    } finally {
+      setPoliciesLoading(false);
+    }
+  };
 
   const loadCompanies = async () => {
     try {
@@ -30,6 +43,7 @@ function CompaniesPage() {
 
   useEffect(() => {
     loadCompanies();
+    loadPolicies();
   }, []);
 
   const handleCreate = async (values) => {
@@ -55,6 +69,7 @@ function CompaniesPage() {
       address: company.address || '',
       phone: company.phone || '',
       status: company.status,
+      policy_id: company.admin?.policy_id || undefined,
     });
     setEditOpen(true);
   };
@@ -84,9 +99,23 @@ function CompaniesPage() {
     }
   };
 
+  const policyNameById = adminPolicies.reduce((map, policy) => {
+    map[policy.id] = policy.name;
+    return map;
+  }, {});
+
   const columns = [
     { title: 'Name', dataIndex: 'name', key: 'name' },
     { title: 'Code', dataIndex: 'code', key: 'code' },
+    { title: 'Admin Username', key: 'admin_username', render: (_, row) => row.admin?.username || '-' },
+    {
+      title: 'Admin Policy',
+      key: 'admin_policy',
+      render: (_, row) => {
+        const policyName = row.admin?.policy_id ? policyNameById[row.admin.policy_id] : null;
+        return policyName ? <Tag color="blue">{policyName}</Tag> : <Tag>Custom / Unassigned</Tag>;
+      },
+    },
     { title: 'Phone', dataIndex: 'phone', key: 'phone' },
     {
       title: 'Status',
@@ -116,7 +145,7 @@ function CompaniesPage() {
     <Space direction="vertical" size={16} style={{ width: '100%' }}>
       <PageHeader
         title="Companies"
-        description="Manage company records and their admin accounts."
+        description="Manage company records and assign admin policies."
         actions={[
           <Button key="create" type="primary" size="large" style={{ borderRadius: 10, fontWeight: 600 }} onClick={() => setCreateOpen(true)}>
             Create Company
@@ -158,6 +187,13 @@ function CompaniesPage() {
           <Form.Item name="admin_password" label="Company Admin Password" rules={[{ required: true, message: 'Admin password is required' }, { min: 6, message: 'Min 6 chars' }]}>
             <Input.Password />
           </Form.Item>
+          <Form.Item
+            name="policy_id"
+            label="Admin Policy"
+            rules={[{ required: true, message: 'Select an admin policy' }]}
+          >
+            <PolicyAssignSelect policies={adminPolicies} loading={policiesLoading} placeholder="Select admin policy" />
+          </Form.Item>
           <Button type="primary" htmlType="submit" loading={saving} size="large" style={{ width: '100%', borderRadius: 10, fontWeight: 600 }}>
             Create Company
           </Button>
@@ -170,7 +206,21 @@ function CompaniesPage() {
           <Form.Item name="code" label="Company Code" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="address" label="Address"><Input /></Form.Item>
           <Form.Item name="phone" label="Phone"><Input /></Form.Item>
-          <Form.Item name="status" label="Status" rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item name="status" label="Status" rules={[{ required: true }]}>
+            <Select
+              options={[
+                { label: 'Active', value: 'active' },
+                { label: 'Inactive', value: 'inactive' },
+              ]}
+            />
+          </Form.Item>
+          <Form.Item
+            name="policy_id"
+            label="Admin Policy"
+            rules={[{ required: true, message: 'Select an admin policy' }]}
+          >
+            <PolicyAssignSelect policies={adminPolicies} loading={policiesLoading} placeholder="Select admin policy" />
+          </Form.Item>
           <Button type="primary" htmlType="submit" loading={saving} size="large" style={{ width: '100%', borderRadius: 10, fontWeight: 600 }}>
             Update Company
           </Button>

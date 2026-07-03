@@ -18,8 +18,23 @@ import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosConfig";
 import { loginSuccess } from "../../store/authSlice";
 import { useAppTheme } from "../../theme/AppThemeContext";
+import { firstAllowedPath } from "../../utils/accessModules";
 
 const { Title, Text, Paragraph } = Typography;
+
+const adminHomeRoutes = [
+  { path: "/dashboard", module: "dashboard" },
+  { path: "/users", module: "users" },
+  { path: "/customers", module: "customers" },
+  { path: "/vendors", module: "vendors" },
+  { path: "/purchases", module: "purchases" },
+  { path: "/products", module: "products" },
+  { path: "/sales", module: "sales" },
+  { path: "/invoices", module: "invoices" },
+  { path: "/payments", module: "payments" },
+  { path: "/reports", module: "reports" },
+  { path: "/chat", module: "chat" },
+];
 
 function Login() {
   const { message } = App.useApp();
@@ -54,7 +69,7 @@ function Login() {
             ? "/sales"
             : role === "vendor"
               ? "/purchases"
-              : "/dashboard";
+              : firstAllowedPath(response.data.data, adminHomeRoutes);
       navigate(nextPath, { replace: true });
     } catch (error) {
       message.error(error.response?.data?.message || "Login failed");

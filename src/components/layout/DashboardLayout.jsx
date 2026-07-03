@@ -26,6 +26,7 @@ import { logout } from "../../store/authSlice";
 import Sidebar from "./Sidebar";
 import { useAppTheme } from "../../theme/AppThemeContext";
 import api from "../../api/axiosConfig";
+import { firstAllowedPath, hasModuleAccess } from "../../utils/accessModules";
 
 const AdminDashboard = lazy(() => import("../../pages/dashboard/AdminDashboard"));
 const CustomerList = lazy(() => import("../../pages/customers/CustomerList"));
@@ -40,8 +41,26 @@ const LedgerView = lazy(() => import("../../pages/ledger/LedgerView"));
 const CustomerSalesPage = lazy(() => import("../../pages/sales/CustomerSalesPage"));
 const ChatSupport = lazy(() => import("../../pages/chat/ChatSupport"));
 const CompaniesPage = lazy(() => import("../../pages/companies/CompaniesPage"));
+const CompanyUsersPage = lazy(() => import("../../pages/users/CompanyUsersPage"));
+const PoliciesPage = lazy(() => import("../../pages/admin/PoliciesPage"));
 
 const { Header, Content, Sider, Footer } = Layout;
+
+const adminRoutes = [
+  { path: "/dashboard", module: "dashboard", element: <AdminDashboard /> },
+  { path: "/users", module: "users", element: <CompanyUsersPage /> },
+  { path: "/customers", module: "customers", element: <CustomerList /> },
+  { path: "/vendors", module: "vendors", element: <VendorList /> },
+  { path: "/purchases", module: "purchases", element: <PurchaseList /> },
+  { path: "/products", module: "products", element: <ProductList /> },
+  { path: "/sales", module: "sales", element: <SalesHistory /> },
+  { path: "/invoices", module: "invoices", element: <SalesHistory /> },
+  { path: "/invoices/:id", module: "invoices", element: <InvoiceDetails /> },
+  { path: "/payments", module: "payments", element: <PaymentList /> },
+  { path: "/reports", module: "reports", element: <Reports /> },
+  { path: "/ledger", module: "customers", element: <LedgerView /> },
+  { path: "/chat", module: "chat", element: <ChatSupport /> },
+];
 
 function DashboardLayout() {
   const [chatUnreadTotal, setChatUnreadTotal] = useState(0);
@@ -166,23 +185,22 @@ function DashboardLayout() {
         {user?.role === "super_admin" ? (
           <>
             <Route path="/companies" element={<CompaniesPage />} />
+            <Route path="/admin/policies" element={<PoliciesPage />} />
             <Route path="*" element={<Navigate to="/companies" replace />} />
           </>
-        ) : user?.role === "admin" ? (
+        ) : user?.role === "admin" || user?.role === "company_user" ? (
           <>
-            <Route path="/dashboard" element={<AdminDashboard />} />
-            <Route path="/customers" element={<CustomerList />} />
-            <Route path="/vendors" element={<VendorList />} />
-            <Route path="/purchases" element={<PurchaseList />} />
-            <Route path="/products" element={<ProductList />} />
-            <Route path="/sales" element={<SalesHistory />} />
-            <Route path="/invoices" element={<SalesHistory />} />
-            <Route path="/invoices/:id" element={<InvoiceDetails />} />
-            <Route path="/payments" element={<PaymentList />} />
-            <Route path="/reports" element={<Reports />} />
-            <Route path="/ledger" element={<LedgerView />} />
-            <Route path="/chat" element={<ChatSupport />} />
-            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+            {user?.role === "admin" ? (
+              <>
+                <Route path="/admin/policies" element={<PoliciesPage />} />
+              </>
+            ) : null}
+            {adminRoutes
+              .filter((route) => hasModuleAccess(user, route.module))
+              .map((route) => (
+                <Route key={route.path} path={route.path} element={route.element} />
+              ))}
+            <Route path="*" element={<Navigate to={firstAllowedPath(user, adminRoutes)} replace />} />
           </>
         ) : user?.role === "vendor" ? (
           <>
@@ -264,9 +282,6 @@ function DashboardLayout() {
               <div>
                 <Typography.Text strong style={{ display: "block", letterSpacing: 1.2 }}>
                   PAPERTECH
-                </Typography.Text>
-                <Typography.Text type="secondary" style={{ fontSize: 12 }}>
-                  Desktop ERP
                 </Typography.Text>
               </div>
             ) : null}
