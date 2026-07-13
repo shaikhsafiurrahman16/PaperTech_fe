@@ -2,6 +2,7 @@ const BRAND_COLOR = [91, 82, 217];
 const ACCENT_COLOR = [16, 185, 129];
 const TEXT_COLOR = [30, 41, 59];
 const MUTED_COLOR = [100, 116, 139];
+const APP_NAME = "TRADESTACK";
 
 export function addPdfBrandHeader(doc, { title, subtitle, metaLeft = [], metaRight = [] }) {
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -11,7 +12,7 @@ export function addPdfBrandHeader(doc, { title, subtitle, metaLeft = [], metaRig
   doc.setTextColor(255, 255, 255);
   doc.setFontSize(18);
   doc.setFont(undefined, "bold");
-  doc.text("PAPERTECH", 14, 13);
+  doc.text(APP_NAME, 14, 13);
   doc.setFontSize(11);
   doc.setFont(undefined, "normal");
   doc.text(title, 14, 21);
@@ -44,7 +45,7 @@ export function addPdfBrandHeader(doc, { title, subtitle, metaLeft = [], metaRig
   return Math.max(leftY, rightY) + 6;
 }
 
-export function addPdfPageFooters(doc, footerText = "PAPERTECH") {
+export function addPdfPageFooters(doc, footerText = APP_NAME) {
   const pageCount = doc.getNumberOfPages();
   for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
     doc.setPage(pageNumber);

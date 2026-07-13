@@ -19,6 +19,7 @@ import api from "../../api/axiosConfig";
 import { loginSuccess } from "../../store/authSlice";
 import { useAppTheme } from "../../theme/AppThemeContext";
 import { firstAllowedPath } from "../../utils/accessModules";
+import { APP_NAME } from "../../utils/industryConfig";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -193,7 +194,7 @@ function Login() {
                 </div>
                 <div>
                   <Title level={1} style={{ margin: 0, lineHeight: 1.02, letterSpacing: -1.2 }}>
-                    PaperTech
+                    {APP_NAME}
                   </Title>
                   <Paragraph
                     style={{

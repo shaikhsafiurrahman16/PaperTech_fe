@@ -83,7 +83,7 @@ function Reports() {
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text('PAPERTECH - Complete Report', 14, 20);
+    doc.text('TRADESTACK - Complete Report', 14, 20);
 
     doc.setFontSize(10);
     doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 14, 28);

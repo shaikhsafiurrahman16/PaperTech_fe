@@ -151,7 +151,7 @@ function CustomerList() {
 
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text("PAPERTECH", 14, 20);
+    doc.text("TRADESTACK", 14, 20);
     doc.setFontSize(12);
     doc.text("Customers Report", 14, 28);
     doc.setFontSize(9);

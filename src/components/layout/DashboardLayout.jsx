@@ -27,6 +27,7 @@ import Sidebar from "./Sidebar";
 import { useAppTheme } from "../../theme/AppThemeContext";
 import api from "../../api/axiosConfig";
 import { firstAllowedPath, hasModuleAccess } from "../../utils/accessModules";
+import { APP_NAME } from "../../utils/industryConfig";
 
 const AdminDashboard = lazy(() => import("../../pages/dashboard/AdminDashboard"));
 const CustomerList = lazy(() => import("../../pages/customers/CustomerList"));
@@ -276,12 +277,12 @@ function DashboardLayout() {
                 boxShadow: "0 16px 32px rgba(91, 82, 217, 0.32)",
               }}
             >
-              P
+              TS
             </div>
             {!collapsed ? (
               <div>
                 <Typography.Text strong style={{ display: "block", letterSpacing: 1.2 }}>
-                  PAPERTECH
+                  {APP_NAME.toUpperCase()}
                 </Typography.Text>
               </div>
             ) : null}
@@ -317,7 +318,7 @@ function DashboardLayout() {
                 onClick={() => setCollapsed((value) => !value)}
               />
               <Typography.Text strong style={{ fontSize: 16 }}>
-                {user?.company_name ? `${user.company_name}` : "PaperTech"}
+                {user?.company_name ? `${user.company_name}` : APP_NAME}
               </Typography.Text>
             </Space>
 
@@ -354,7 +355,7 @@ function DashboardLayout() {
               padding: "12px 24px 24px",
             }}
           >
-            © {new Date().getFullYear()} PaperTech. All rights reserved.
+            © {new Date().getFullYear()} {APP_NAME}. All rights reserved.
           </Footer>
         </Layout>
       </Layout>

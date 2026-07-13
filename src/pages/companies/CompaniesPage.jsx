@@ -3,6 +3,7 @@ import { Button, Card, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag
 import api from '../../api/axiosConfig';
 import PageHeader from '../../components/layout/PageHeader';
 import PolicyAssignSelect from '../../components/common/PolicyAssignSelect';
+import { INDUSTRY_TYPES } from '../../utils/industryConfig';
 
 function CompaniesPage() {
   const { message } = App.useApp();
@@ -66,9 +67,13 @@ function CompaniesPage() {
     editForm.setFieldsValue({
       name: company.name,
       code: company.code,
+      field_type: company.field_type || 'paper',
       address: company.address || '',
       phone: company.phone || '',
       status: company.status,
+      admin_full_name: company.admin?.full_name || '',
+      admin_username: company.admin?.username || '',
+      admin_password: '',
       policy_id: company.admin?.policy_id || undefined,
     });
     setEditOpen(true);
@@ -107,6 +112,12 @@ function CompaniesPage() {
   const columns = [
     { title: 'Name', dataIndex: 'name', key: 'name' },
     { title: 'Code', dataIndex: 'code', key: 'code' },
+    {
+      title: 'Field Type',
+      dataIndex: 'field_type',
+      key: 'field_type',
+      render: (value) => <Tag color="purple">{INDUSTRY_TYPES.find((item) => item.value === value)?.label || 'Paper'}</Tag>,
+    },
     { title: 'Admin Username', key: 'admin_username', render: (_, row) => row.admin?.username || '-' },
     {
       title: 'Admin Policy',
@@ -172,6 +183,9 @@ function CompaniesPage() {
           <Form.Item name="code" label="Company Code" rules={[{ required: true, message: 'Company code is required' }]}>
             <Input />
           </Form.Item>
+          <Form.Item name="field_type" label="Field Type" initialValue="paper" rules={[{ required: true, message: 'Field type is required' }]}>
+            <Select options={INDUSTRY_TYPES} />
+          </Form.Item>
           <Form.Item name="address" label="Address">
             <Input />
           </Form.Item>
@@ -204,8 +218,20 @@ function CompaniesPage() {
         <Form form={editForm} layout="vertical" onFinish={handleUpdate}>
           <Form.Item name="name" label="Company Name" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="code" label="Company Code" rules={[{ required: true }]}><Input /></Form.Item>
+          <Form.Item name="field_type" label="Field Type" rules={[{ required: true }]}>
+            <Select options={INDUSTRY_TYPES} />
+          </Form.Item>
           <Form.Item name="address" label="Address"><Input /></Form.Item>
           <Form.Item name="phone" label="Phone"><Input /></Form.Item>
+          <Form.Item name="admin_full_name" label="Company Admin Name" rules={[{ required: true, message: 'Admin name is required' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="admin_username" label="Company Admin Username" rules={[{ required: true, message: 'Admin username is required' }]}>
+            <Input />
+          </Form.Item>
+          <Form.Item name="admin_password" label="New Admin Password" rules={[{ min: 6, message: 'Min 6 chars' }]}>
+            <Input.Password placeholder="Leave blank to keep current password" />
+          </Form.Item>
           <Form.Item name="status" label="Status" rules={[{ required: true }]}>
             <Select
               options={[

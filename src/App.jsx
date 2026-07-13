@@ -5,6 +5,7 @@ import { message } from 'antd';
 import Login from './pages/auth/Login';
 import DashboardLayout from './components/layout/DashboardLayout';
 import { firstAllowedPath } from './utils/accessModules';
+import useOverlayFormUx from './hooks/useOverlayFormUx';
 
 const adminHomeRoutes = [
   { path: '/dashboard', module: 'dashboard' },
@@ -55,6 +56,8 @@ function ProtectedRoute({ children }) {
 }
 
 function App() {
+  useOverlayFormUx();
+
   return (
     <Routes>
       <Route

@@ -31,56 +31,15 @@ import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import usePermissions from "../../hooks/usePermissions";
-
-const PAPER_TYPE_OPTIONS = [
-  "carbon",
-  "Indonesia",
-  "Crown",
-  "Local",
-  "Bleach",
-  "art",
-  "Matt",
-  "Sticker",
-  "Everycard",
-  "News",
-  "Filecard",
-];
-
-const SIZE_OPTIONS = [
-  "23x36",
-  "20x30",
-  "25x36",
-  "27x34",
-  "18x23",
-  "17x27",
-  "30x40",
-  "22x28",
-];
-
-const GRAM_OPTIONS = [
-  42,
-  52,
-  60,
-  68,
-  70,
-  75,
-  80,
-  90,
-  100,
-  150,
-  113,
-  128,
-  230,
-  250,
-  300,
-  350,
-  400,
-];
-
-const UNIT_OPTIONS = ["Card", "Paper", "sticker"];
+import { APP_NAME, getIndustryConfig } from "../../utils/industryConfig";
+import { useSelector } from "react-redux";
 
 const getSheetsPerPack = (unitType) =>
-  String(unitType || "").toLowerCase() === "paper" ? 500 : 100;
+  String(unitType || "").toLowerCase() === "paper"
+    ? 500
+    : ["card", "sticker"].includes(String(unitType || "").toLowerCase())
+      ? 100
+      : 1;
 
 function ProductList() {
   const [products, setProducts] = useState([]);
@@ -91,6 +50,8 @@ function ProductList() {
   const [searchTerm, setSearchTerm] = useState("");
   const selectedUnitType = Form.useWatch("unit_type", form);
   const { canCreate, canUpdate, canDelete } = usePermissions("products");
+  const { user } = useSelector((state) => state.auth);
+  const industryConfig = getIndustryConfig(user?.field_type);
 
   const fetchProducts = async () => {
     try {
@@ -117,7 +78,7 @@ function ProductList() {
   const handleOpenProductModal = () => {
     setEditingProduct(null);
     form.resetFields();
-    form.setFieldsValue({ unit_type: "Paper", sheets_per_pack: 500 });
+    form.setFieldsValue({ unit_type: industryConfig.unitOptions[0], sheets_per_pack: getSheetsPerPack(industryConfig.unitOptions[0]), product_specs: {} });
     setModalOpen(true);
   };
 
@@ -131,6 +92,7 @@ function ProductList() {
       gram: product.gram ? Number(product.gram) : undefined,
       unit_type: product.unit_type,
       sheets_per_pack: getSheetsPerPack(product.unit_type),
+      product_specs: product.product_specs || {},
       cost_price: Number(product.cost_price || 0),
       sale_price: Number(product.sale_price || 0),
       current_stock: Number(product.current_stock || 0),
@@ -144,8 +106,10 @@ function ProductList() {
       setLoading(true);
       const payload = {
         ...values,
+        size: industryConfig.showPaperFields ? values.size : null,
+        gram: industryConfig.showPaperFields ? Number(values.gram || 0) : 0,
         sheets_per_pack: getSheetsPerPack(values.unit_type),
-        gram: Number(values.gram || 0),
+        product_specs: values.product_specs || {},
         cost_price: Number(values.cost_price || 0),
         sale_price: Number(values.sale_price || 0),
         current_stock: Number(values.current_stock || 0),
@@ -197,10 +161,12 @@ function ProductList() {
     const data = filteredProducts.map((p) => ({
       Name: p.name,
       Type: p.product_type,
-      Size: p.size,
-      Gram: p.gram,
       Unit: p.unit_type,
-      "Sheets Per Pack": p.sheets_per_pack,
+      ...(industryConfig.showPaperFields ? { Size: p.size, Gram: p.gram, "Sheets Per Pack": p.sheets_per_pack } : {}),
+      ...industryConfig.specFields.reduce((row, field) => {
+        row[field.label] = p.product_specs?.[field.name] || "-";
+        return row;
+      }, {}),
       "Cost Price": `Rs. ${p.cost_price}`,
       "Sale Price": `Rs. ${p.sale_price}`,
       "Current Stock (Sheets)": p.current_stock,
@@ -221,7 +187,7 @@ function ProductList() {
 
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text("PAPERTECH", 14, 18);
+    doc.text(APP_NAME.toUpperCase(), 14, 18);
     doc.setFontSize(12);
     doc.text("Products Inventory Report", 14, 26);
     doc.setFontSize(9);
@@ -231,10 +197,9 @@ function ProductList() {
     const tableData = filteredProducts.map((p) => [
       p.name,
       p.product_type,
-      p.size || "",
-      p.gram || "",
+      ...(industryConfig.showPaperFields ? [p.size || "", p.gram || "", p.sheets_per_pack] : []),
+      ...industryConfig.specFields.slice(0, 3).map((field) => p.product_specs?.[field.name] || ""),
       p.unit_type,
-      p.sheets_per_pack,
       `Rs. ${Number(p.cost_price).toFixed(2)}`,
       `Rs. ${Number(p.sale_price).toFixed(2)}`,
       p.current_stock,
@@ -242,7 +207,17 @@ function ProductList() {
     ]);
 
     autoTable(doc, {
-      head: [["Name", "Type", "Size", "Gram", "Unit", "Sheets", "Cost Price", "Sale Price", "Stock", "Alert"]],
+      head: [[
+        "Name",
+        industryConfig.typeLabel,
+        ...(industryConfig.showPaperFields ? ["Size", "Gram"] : industryConfig.specFields.slice(0, 3).map((field) => field.label)),
+        "Unit",
+        ...(industryConfig.showPaperFields ? ["Sheets"] : []),
+        "Cost Price",
+        "Sale Price",
+        "Stock",
+        "Alert",
+      ]],
       body: tableData,
       startY: 38,
       margin: 10,
@@ -260,6 +235,7 @@ function ProductList() {
   const filteredProducts = normalizedSearch
     ? products.filter((p) =>
       [p.name, p.product_type, p.size, p.gram, p.unit_type, p.description]
+        .concat(Object.values(p.product_specs || {}))
         .filter(Boolean)
         .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
     )
@@ -276,15 +252,23 @@ function ProductList() {
         </Tooltip>
       ),
     },
-    { title: "Type", dataIndex: "product_type", key: "product_type" },
-    { title: "Size", dataIndex: "size", key: "size" },
-    { title: "Gram", dataIndex: "gram", key: "gram" },
+    { title: industryConfig.typeLabel, dataIndex: "product_type", key: "product_type" },
+    ...(industryConfig.showPaperFields
+      ? [
+        { title: "Size", dataIndex: "size", key: "size" },
+        { title: "Gram", dataIndex: "gram", key: "gram" },
+      ]
+      : industryConfig.specFields.slice(0, 4).map((field) => ({
+        title: field.label,
+        key: field.name,
+        render: (_, record) => record.product_specs?.[field.name] || "-",
+      }))),
     { title: "Unit", dataIndex: "unit_type", key: "unit_type" },
-    {
+    ...(industryConfig.showPaperFields ? [{
       title: "Sheets/Pack",
       dataIndex: "sheets_per_pack",
       key: "sheets_per_pack",
-    },
+    }] : []),
     {
       title: "Cost Price",
       dataIndex: "cost_price",
@@ -298,7 +282,7 @@ function ProductList() {
       render: (text) => `Rs. ${text}`,
     },
     {
-      title: "Stock (Sheets)",
+      title: industryConfig.showPaperFields ? "Stock (Sheets)" : "Stock",
       dataIndex: "current_stock",
       key: "current_stock",
       render: (text, record) => (
@@ -343,7 +327,7 @@ function ProductList() {
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
-        <Typography.Title level={2}>Products Inventory</Typography.Title>
+        <Typography.Title level={2}>{industryConfig.title}</Typography.Title>
       </div>
 
       <Row gutter={16} style={{ marginBottom: 24 }}>
@@ -464,13 +448,13 @@ function ProductList() {
                   { whitespace: true, message: "Product name cannot be empty spaces" },
                 ]}
               >
-                <Input placeholder="e.g.: A4 Paper" size="large" />
+                <Input placeholder="Enter name" size="large" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item
                 name="product_type"
-                label="Type"
+                label={industryConfig.typeLabel}
                 rules={[
                   { required: true, message: "Type is required" },
                   { whitespace: true, message: "Type cannot be empty spaces" },
@@ -478,8 +462,8 @@ function ProductList() {
               >
                 <Select
                   size="large"
-                  placeholder="Select paper type"
-                  options={PAPER_TYPE_OPTIONS.map((value) => ({
+                  placeholder={`Select ${industryConfig.typeLabel.toLowerCase()}`}
+                  options={industryConfig.typeOptions.map((value) => ({
                     label: value,
                     value,
                   }))}
@@ -488,34 +472,57 @@ function ProductList() {
             </Col>
           </Row>
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <Form.Item
-                name="size"
-                label="Size"
-                rules={[{ required: true, message: "Size is required" }]}
-              >
-                <Select
-                  size="large"
-                  placeholder="Select size"
-                  options={SIZE_OPTIONS.map((value) => ({ label: value, value }))}
-                />
-              </Form.Item>
-            </Col>
-            <Col span={12}>
-              <Form.Item
-                name="gram"
-                label="Gram"
-                rules={[{ required: true, message: "Gram is required" }]}
-              >
-                <Select
-                  size="large"
-                  placeholder="Select gram"
-                  options={GRAM_OPTIONS.map((value) => ({ label: value, value }))}
-                />
-              </Form.Item>
-            </Col>
-          </Row>
+          {industryConfig.showPaperFields ? (
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="size"
+                  label="Size"
+                  rules={[{ required: true, message: "Size is required" }]}
+                >
+                  <Select
+                    size="large"
+                    placeholder="Select size"
+                    options={industryConfig.sizeOptions.map((value) => ({ label: value, value }))}
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="gram"
+                  label="Gram"
+                  rules={[{ required: true, message: "Gram is required" }]}
+                >
+                  <Select
+                    size="large"
+                    placeholder="Select gram"
+                    options={industryConfig.gramOptions.map((value) => ({ label: value, value }))}
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          ) : null}
+
+          {!industryConfig.showPaperFields ? (
+            <Row gutter={16}>
+              {industryConfig.specFields.map((field) => (
+                <Col span={12} key={field.name}>
+                  <Form.Item name={["product_specs", field.name]} label={field.label}>
+                    {field.options ? (
+                      <Select
+                        allowClear
+                        size="large"
+                        placeholder={`Select ${field.label.toLowerCase()}`}
+                        options={field.options.map((value) => ({ label: value, value }))}
+                      />
+                    ) : (
+                      <Input size="large" placeholder={field.label} />
+                    )}
+                  </Form.Item>
+                </Col>
+              ))}
+            </Row>
+          ) : null}
 
           <Row gutter={16}>
             <Col span={12}>
@@ -527,11 +534,11 @@ function ProductList() {
                 <Select
                   size="large"
                   placeholder="Select unit"
-                  options={UNIT_OPTIONS.map((value) => ({ label: value, value }))}
+                  options={industryConfig.unitOptions.map((value) => ({ label: value, value }))}
                 />
               </Form.Item>
             </Col>
-            <Col span={12}>
+            {industryConfig.showPaperFields ? <Col span={12}>
               <Form.Item name="sheets_per_pack" label="Sheets Per Pack">
                 <InputNumber
                   min={0}
@@ -540,7 +547,7 @@ function ProductList() {
                   style={{ width: "100%" }}
                 />
               </Form.Item>
-            </Col>
+            </Col> : null}
           </Row>
 
           <Row gutter={16}>
@@ -578,14 +585,14 @@ function ProductList() {
             <Col span={12}>
               <Form.Item
                 name="current_stock"
-                label="Current Stock (Sheets)"
+                label={industryConfig.showPaperFields ? "Current Stock (Sheets)" : "Current Stock"}
                 rules={[{ required: true, message: "Current stock is required" }]}
               >
                 <InputNumber min={0} size="large" style={{ width: "100%" }} disabled={Boolean(editingProduct)} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name="min_stock_alert" label="Low Stock Alert (Sheets)">
+              <Form.Item name="min_stock_alert" label={industryConfig.showPaperFields ? "Low Stock Alert (Sheets)" : "Low Stock Alert"}>
                 <InputNumber min={0} size="large" style={{ width: "100%" }} />
               </Form.Item>
             </Col>

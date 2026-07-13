@@ -95,7 +95,7 @@ function PaymentList() {
 
     const doc = new jsPDF();
     doc.setFontSize(18);
-    doc.text('PAPERTECH - Payments Report', 14, 20);
+    doc.text('TRADESTACK - Payments Report', 14, 20);
 
     doc.setFontSize(10);
     doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 14, 28);

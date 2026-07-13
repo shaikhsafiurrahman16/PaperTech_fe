@@ -80,7 +80,7 @@ function CustomerSalesPage() {
     
     // Header
     doc.setFontSize(18);
-    doc.text('PAPERTECH - Sales Report', 14, 20);
+    doc.text('TRADESTACK - Sales Report', 14, 20);
     
     doc.setFontSize(10);
     doc.text(`Customer: ${user?.full_name || user?.username}`, 14, 28);
