@@ -325,15 +325,26 @@ body.dark .papertech-brand-title {
 .ant-modal {
   top: auto !important;
   padding-bottom: 0 !important;
-  max-width: min(96vw, 900px);
+  max-width: min(96vw, 980px);
+}
+
+.ant-modal:not(.ant-modal-confirm) {
+  width: min(94vw, 920px) !important;
 }
 
 .ant-modal-content {
   border: 1px solid var(--papertech-border) !important;
   border-radius: var(--papertech-radius-lg) !important;
   box-shadow: var(--papertech-shadow) !important;
-  padding: 24px !important;
+  padding: 0 !important;
   overflow: hidden;
+}
+
+.ant-modal-header,
+.ant-drawer-header {
+  padding: 20px 24px !important;
+  background:
+    linear-gradient(135deg, color-mix(in srgb, var(--papertech-primary) 11%, var(--papertech-surface-strong)) 0%, var(--papertech-surface-strong) 74%) !important;
 }
 
 .ant-modal-title {
@@ -343,12 +354,52 @@ body.dark .papertech-brand-title {
 }
 
 .ant-modal-body {
-  padding-top: 14px !important;
+  padding: 24px !important;
 }
 
-.ant-modal .ant-form {
+.ant-modal:not(.ant-modal-confirm) .ant-form,
+.ant-drawer .ant-form {
   display: grid;
-  gap: 2px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: 16px;
+  row-gap: 4px;
+  align-items: start;
+}
+
+.ant-modal:not(.ant-modal-confirm) .ant-form > .ant-form-item {
+  grid-column: span 6;
+  margin-bottom: 14px;
+}
+
+.ant-drawer .ant-form > .ant-form-item {
+  grid-column: span 4;
+  margin-bottom: 14px;
+}
+
+.ant-modal:not(.ant-modal-confirm) .ant-form > .ant-form-item:has(textarea),
+.ant-drawer .ant-form > .ant-form-item:has(textarea),
+.ant-modal:not(.ant-modal-confirm) .ant-form > .ant-row,
+.ant-drawer .ant-form > .ant-row,
+.ant-modal:not(.ant-modal-confirm) .ant-form > .ant-space,
+.ant-drawer .ant-form > .ant-space,
+.ant-modal:not(.ant-modal-confirm) .ant-form > .ant-card,
+.ant-drawer .ant-form > .ant-card,
+.ant-modal:not(.ant-modal-confirm) .ant-form > .ant-typography,
+.ant-drawer .ant-form > .ant-typography,
+.ant-modal:not(.ant-modal-confirm) .ant-form > .ant-form-list,
+.ant-drawer .ant-form > .ant-form-list {
+  grid-column: 1 / -1;
+}
+
+.ant-modal:not(.ant-modal-confirm) .ant-form > .ant-space,
+.ant-drawer .ant-form > .ant-space {
+  justify-content: flex-end;
+  padding-top: 4px;
+}
+
+.ant-modal:not(.ant-modal-confirm) .ant-form-item-control-input,
+.ant-drawer .ant-form-item-control-input {
+  min-height: 40px;
 }
 
 .ant-drawer .ant-drawer-content-wrapper {
@@ -357,7 +408,7 @@ body.dark .papertech-brand-title {
   left: 50% !important;
   right: auto !important;
   bottom: auto !important;
-  width: min(var(--papertech-drawer-width, 760px), calc(100vw - 32px)) !important;
+  width: min(var(--papertech-drawer-width, 980px), calc(100vw - 32px)) !important;
   max-width: calc(100vw - 32px) !important;
   height: auto !important;
   max-height: calc(100vh - 32px) !important;
@@ -377,14 +428,27 @@ body.dark .papertech-brand-title {
   padding: 24px;
 }
 
-.ant-drawer-header {
-  padding: 20px 24px !important;
-}
-
 .ant-drawer-title {
   color: var(--papertech-text) !important;
   font-size: 18px;
   font-weight: 750;
+}
+
+.ant-modal-close,
+.ant-drawer-close {
+  color: var(--papertech-text-muted) !important;
+  border-radius: var(--papertech-radius-sm);
+  transition:
+    background-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.ant-modal-close:hover,
+.ant-drawer-close:hover {
+  color: var(--papertech-text) !important;
+  background: color-mix(in srgb, var(--papertech-primary) 12%, transparent) !important;
+  transform: translateY(-1px);
 }
 
 .ant-message-notice-content {
@@ -518,6 +582,18 @@ body.dark .papertech-brand-title {
   .ant-modal-content,
   .ant-drawer .ant-drawer-content {
     border-radius: 14px !important;
+  }
+
+  .ant-modal:not(.ant-modal-confirm) .ant-form,
+  .ant-drawer .ant-form {
+    grid-template-columns: 1fr;
+  }
+
+  .ant-modal:not(.ant-modal-confirm) .ant-form > .ant-form-item,
+  .ant-drawer .ant-form > .ant-form-item,
+  .ant-modal:not(.ant-modal-confirm) .ant-form > .ant-form-item:has(textarea),
+  .ant-drawer .ant-form > .ant-form-item:has(textarea) {
+    grid-column: 1 / -1;
   }
 
   .ant-table-wrapper {

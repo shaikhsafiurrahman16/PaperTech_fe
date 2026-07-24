@@ -62,6 +62,7 @@ function CustomerList() {
   const handleCreateCustomer = () => {
     setEditingCustomer(null);
     form.resetFields();
+    form.setFieldsValue({ username: "", password: "" });
     setDrawerOpen(true);
   };
 
@@ -234,7 +235,7 @@ function CustomerList() {
             color: type === "star" ? "#ff4d4f" : "#666",
           }}
         >
-          {type === "star" ? "⭐ Star" : "Local"}
+          {type === "star" ? "Star" : "Local"}
         </span>
       ),
     },
@@ -407,7 +408,7 @@ function CustomerList() {
       </Card>
 
       <Drawer
-        title={editingCustomer ? "👥 Edit Customer" : "👥 Add New Customer"}
+        title={editingCustomer ? "Edit Customer" : "Add New Customer"}
         open={drawerOpen}
         width={450}
         onClose={() => {
@@ -417,7 +418,7 @@ function CustomerList() {
         }}
         bodyStyle={{ paddingBottom: 80 }}
       >
-        <Form layout="vertical" form={form} onFinish={onFinish}>
+        <Form layout="vertical" form={form} onFinish={onFinish} autoComplete="off">
           <Form.Item
             name="full_name"
             label="Owner Full Name"
@@ -499,7 +500,7 @@ function CustomerList() {
                   },
                 ]}
               >
-                <Input autoComplete="off" size="large" />
+                <Input autoComplete="new-password" size="large" />
               </Form.Item>
 
               <Form.Item

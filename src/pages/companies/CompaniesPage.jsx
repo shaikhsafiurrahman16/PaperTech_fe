@@ -158,7 +158,11 @@ function CompaniesPage() {
         title="Companies"
         description="Manage company records and assign admin policies."
         actions={[
-          <Button key="create" type="primary" size="large" style={{ borderRadius: 10, fontWeight: 600 }} onClick={() => setCreateOpen(true)}>
+          <Button key="create" type="primary" size="large" style={{ borderRadius: 10, fontWeight: 600 }} onClick={() => {
+            form.resetFields();
+            form.setFieldsValue({ admin_username: "", admin_password: "" });
+            setCreateOpen(true);
+          }}>
             Create Company
           </Button>,
         ]}
@@ -176,7 +180,7 @@ function CompaniesPage() {
       </Card>
 
       <Modal title="Create Company + Admin" open={createOpen} onCancel={() => setCreateOpen(false)} footer={null} centered>
-        <Form form={form} layout="vertical" onFinish={handleCreate}>
+        <Form form={form} layout="vertical" onFinish={handleCreate} autoComplete="off">
           <Form.Item name="name" label="Company Name" rules={[{ required: true, message: 'Company name is required' }]}>
             <Input />
           </Form.Item>
@@ -193,7 +197,7 @@ function CompaniesPage() {
             <Input />
           </Form.Item>
           <Form.Item name="admin_username" label="Company Admin Username" rules={[{ required: true, message: 'Admin username is required' }]}>
-            <Input autoComplete="off" />
+            <Input autoComplete="new-password" />
           </Form.Item>
           <Form.Item name="admin_password" label="Company Admin Password" rules={[{ required: true, message: 'Admin password is required' }, { min: 6, message: 'Min 6 chars' }]}>
             <Input.Password autoComplete="new-password" />
@@ -212,7 +216,7 @@ function CompaniesPage() {
       </Modal>
 
       <Modal title="Edit Company" open={editOpen} onCancel={() => setEditOpen(false)} footer={null} centered>
-        <Form form={editForm} layout="vertical" onFinish={handleUpdate}>
+        <Form form={editForm} layout="vertical" onFinish={handleUpdate} autoComplete="off">
           <Form.Item name="name" label="Company Name" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="code" label="Company Code" rules={[{ required: true }]}><Input /></Form.Item>
           <Form.Item name="field_type" label="Field Type" rules={[{ required: true }]}>
@@ -221,7 +225,7 @@ function CompaniesPage() {
           <Form.Item name="address" label="Address"><Input /></Form.Item>
           <Form.Item name="phone" label="Phone"><Input /></Form.Item>
           <Form.Item name="admin_username" label="Company Admin Username" rules={[{ required: true, message: 'Admin username is required' }]}>
-            <Input autoComplete="off" />
+            <Input autoComplete="new-password" />
           </Form.Item>
           <Form.Item name="admin_password" label="New Admin Password" rules={[{ min: 6, message: 'Min 6 chars' }]}>
             <Input.Password autoComplete="new-password" />

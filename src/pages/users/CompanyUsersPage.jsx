@@ -50,6 +50,7 @@ function CompanyUsersPage() {
   const openCreate = () => {
     setEditingUser(null);
     form.resetFields();
+    form.setFieldsValue({ username: "", password: "" });
     setModalOpen(true);
   };
 
@@ -159,7 +160,7 @@ function CompanyUsersPage() {
         footer={null}
         centered
       >
-        <Form form={form} layout="vertical" requiredMark={false} onFinish={handleSubmit}>
+        <Form form={form} layout="vertical" requiredMark={false} onFinish={handleSubmit} autoComplete="off">
           <Form.Item name="full_name" label="Full Name" rules={[{ required: true, message: "Full name is required" }]}>
             <Input />
           </Form.Item>
@@ -177,7 +178,7 @@ function CompanyUsersPage() {
             <Input.TextArea rows={3} />
           </Form.Item>
           <Form.Item name="username" label="Username" rules={[{ required: true, message: "Username is required" }]}>
-            <Input autoComplete="off" />
+            <Input autoComplete="new-password" />
           </Form.Item>
           <Form.Item
             name="password"

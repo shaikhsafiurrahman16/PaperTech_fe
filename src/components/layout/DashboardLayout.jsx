@@ -355,7 +355,7 @@ function DashboardLayout() {
               padding: "12px 24px 24px",
             }}
           >
-            © {new Date().getFullYear()} {APP_NAME}. All rights reserved.
+            (c) {new Date().getFullYear()} {APP_NAME}. All rights reserved.
           </Footer>
         </Layout>
       </Layout>

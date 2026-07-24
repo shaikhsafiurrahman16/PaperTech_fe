@@ -72,7 +72,7 @@ function VendorList() {
   const handleCreateVendor = () => {
     setEditingVendor(null);
     vendorForm.resetFields();
-    vendorForm.setFieldsValue({ opening_balance: 0 });
+    vendorForm.setFieldsValue({ opening_balance: 0, username: "", password: "" });
     setVendorDrawerOpen(true);
   };
 
@@ -464,7 +464,7 @@ function VendorList() {
         }}
         bodyStyle={{ paddingBottom: 80 }}
       >
-        <Form layout="vertical" form={vendorForm} onFinish={handleSaveVendor}>
+        <Form layout="vertical" form={vendorForm} onFinish={handleSaveVendor} autoComplete="off">
           <Form.Item
             name="company_name"
             label="Company Name"
@@ -536,7 +536,7 @@ function VendorList() {
                   { pattern: /^\S+$/, message: "Username cannot contain spaces" },
                 ]}
               >
-                <Input autoComplete="off" size="large" />
+                <Input autoComplete="new-password" size="large" />
               </Form.Item>
 
               <Form.Item
@@ -621,7 +621,7 @@ function VendorList() {
           </Card>
         )}
 
-        <Form layout="vertical" form={paymentForm} onFinish={handleVendorPayment}>
+        <Form layout="vertical" form={paymentForm} onFinish={handleVendorPayment} autoComplete="off">
           <Form.Item
             name="amount"
             label="Payment Amount"
