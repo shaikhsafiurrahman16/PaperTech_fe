@@ -190,7 +190,7 @@ function Login() {
                     boxShadow: "0 18px 40px rgba(91, 82, 217, 0.28)",
                   }}
                 >
-                  P
+                  TS
                 </div>
                 <div>
                   <Title level={1} style={{ margin: 0, lineHeight: 1.02, letterSpacing: -1.2 }}>

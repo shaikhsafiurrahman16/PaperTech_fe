@@ -192,9 +192,6 @@ function CompaniesPage() {
           <Form.Item name="phone" label="Phone">
             <Input />
           </Form.Item>
-          <Form.Item name="admin_full_name" label="Company Admin Name" rules={[{ required: true, message: 'Admin name is required' }]}>
-            <Input />
-          </Form.Item>
           <Form.Item name="admin_username" label="Company Admin Username" rules={[{ required: true, message: 'Admin username is required' }]}>
             <Input />
           </Form.Item>
@@ -223,9 +220,6 @@ function CompaniesPage() {
           </Form.Item>
           <Form.Item name="address" label="Address"><Input /></Form.Item>
           <Form.Item name="phone" label="Phone"><Input /></Form.Item>
-          <Form.Item name="admin_full_name" label="Company Admin Name" rules={[{ required: true, message: 'Admin name is required' }]}>
-            <Input />
-          </Form.Item>
           <Form.Item name="admin_username" label="Company Admin Username" rules={[{ required: true, message: 'Admin username is required' }]}>
             <Input />
           </Form.Item>
