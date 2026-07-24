@@ -4,7 +4,7 @@ import { FileExcelOutlined, FilePdfOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import api from '../../api/axiosConfig';
+import api from '../../services/apiClient';
 
 const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
 const { RangePicker } = DatePicker;
@@ -46,7 +46,6 @@ function Reports() {
   const exportToExcel = () => {
     const wb = XLSX.utils.book_new();
 
-    // Summary sheet
     const summaryData = [
       { Metric: 'Total Sales', Value: summary.total_sales || 0 },
       { Metric: 'Total Customers', Value: summary.total_customers || 0 },
@@ -57,7 +56,6 @@ function Reports() {
     const summarySheet = XLSX.utils.json_to_sheet(summaryData);
     XLSX.utils.book_append_sheet(wb, summarySheet, 'Summary');
 
-    // Stock sheet
     const stockData = stock.map(p => ({
       'Product': p.name,
       'Type': p.product_type,
@@ -67,7 +65,6 @@ function Reports() {
     const stockSheet = XLSX.utils.json_to_sheet(stockData);
     XLSX.utils.book_append_sheet(wb, stockSheet, 'Stock');
 
-    // Balances sheet
     const balancesData = balances.map(c => ({
       'Shop': c.shop_name,
       'Customer': c.full_name,
@@ -90,7 +87,6 @@ function Reports() {
 
     let yPosition = 40;
 
-    // Summary section
     doc.setFontSize(12);
     doc.text('Summary', 14, yPosition);
     yPosition += 8;
@@ -111,7 +107,6 @@ function Reports() {
 
     yPosition = doc.lastAutoTable.finalY + 10;
 
-    // Stock section
     doc.setFontSize(12);
     doc.text('Low Stock Products', 14, yPosition);
     yPosition += 8;
@@ -207,7 +202,6 @@ function Reports() {
           </Form>
         </Card>
 
-        {/* Summary Cards */}
         <Row gutter={[16, 16]} style={{ marginBottom: 24 }}>
           <Col xs={24} sm={12} md={6}>
             <Card>
@@ -247,7 +241,6 @@ function Reports() {
           </Col>
         </Row>
 
-        {/* Stock Report */}
         <Card title="Stock Status Report" style={{ marginBottom: 24 }}>
           <Table
             columns={[
@@ -289,7 +282,6 @@ function Reports() {
           />
         </Card>
 
-        {/* Outstanding Balances */}
         <Card title="Outstanding Balances" style={{ marginBottom: 24 }}>
           <Table
             columns={[
@@ -318,7 +310,6 @@ function Reports() {
           />
         </Card>
 
-        {/* Monthly Sales */}
         <Card title="Monthly Sales Summary">
           <Table
             columns={[

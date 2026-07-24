@@ -1,5 +1,5 @@
 import { useSelector } from "react-redux";
-import { hasModuleAccess } from "../utils/accessModules";
+import { hasModuleAccess } from "../lib/accessModules";
 
 function usePermissions(moduleKey) {
   const { user } = useSelector((state) => state.auth);

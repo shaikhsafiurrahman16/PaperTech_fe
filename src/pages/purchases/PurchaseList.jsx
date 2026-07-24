@@ -21,7 +21,7 @@ import {
 } from "antd";
 import { EditOutlined, MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
-import api from "../../api/axiosConfig";
+import api from "../../services/apiClient";
 import usePermissions from "../../hooks/usePermissions";
 
 const formatMoney = (value) => `Rs. ${Number(value ?? 0).toFixed(2)}`;

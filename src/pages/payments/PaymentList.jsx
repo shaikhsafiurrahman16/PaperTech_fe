@@ -4,7 +4,7 @@ import { PlusOutlined, FileExcelOutlined, FilePdfOutlined, EditOutlined, DeleteO
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import api from '../../api/axiosConfig';
+import api from '../../services/apiClient';
 
 const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
 const { RangePicker } = DatePicker;
@@ -207,7 +207,6 @@ function PaymentList() {
         <Typography.Title level={2}>Payments</Typography.Title>
       </div>
 
-      {/* Statistics */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} md={8}>
           <Card>
@@ -298,7 +297,6 @@ function PaymentList() {
         </Form>
       </Card>
 
-      {/* Action Buttons */}
       <Card style={{ marginBottom: 24 }}>
         <Space wrap>
           <Tooltip title="Record a new customer payment">
@@ -335,7 +333,6 @@ function PaymentList() {
         </Space>
       </Card>
 
-      {/* Payments Table */}
       <Card>
         <Spin spinning={pageLoading}>
           <Table
@@ -349,7 +346,6 @@ function PaymentList() {
         </Spin>
       </Card>
 
-      {/* New Payment Drawer */}
       <Drawer
         title={editingPayment ? 'Edit Payment' : 'Record New Payment'}
         open={drawerOpen}

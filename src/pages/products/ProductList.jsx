@@ -26,12 +26,12 @@ import {
   FilePdfOutlined,
   EditOutlined,
 } from "@ant-design/icons";
-import api from "../../api/axiosConfig";
+import api from "../../services/apiClient";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import usePermissions from "../../hooks/usePermissions";
-import { APP_NAME, getIndustryConfig } from "../../utils/industryConfig";
+import { APP_NAME, getIndustryConfig } from "../../constants/industryConfig";
 import { useSelector } from "react-redux";
 
 const getSheetsPerPack = (unitType) =>

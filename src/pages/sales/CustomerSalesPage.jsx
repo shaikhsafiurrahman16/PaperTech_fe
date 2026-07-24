@@ -4,7 +4,7 @@ import { FileExcelOutlined, FilePdfOutlined, PrinterOutlined, DownloadOutlined, 
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import api from '../../api/axiosConfig';
+import api from '../../services/apiClient';
 import { useSelector } from 'react-redux';
 
 const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
@@ -78,7 +78,6 @@ function CustomerSalesPage() {
     const pageHeight = doc.internal.pageSize.getHeight();
     const pageWidth = doc.internal.pageSize.getWidth();
     
-    // Header
     doc.setFontSize(18);
     doc.text('TRADESTACK - Sales Report', 14, 20);
     
@@ -196,7 +195,6 @@ function CustomerSalesPage() {
 
   return (
     <div style={{ paddingBottom: 32 }}>
-      {/* Header with Customer Info */}
       <Card style={{ marginBottom: 24, background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
         <Row gutter={16}>
           <Col xs={24} sm={12}>
@@ -216,7 +214,6 @@ function CustomerSalesPage() {
         </Row>
       </Card>
 
-      {/* Statistics Cards */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
@@ -259,7 +256,6 @@ function CustomerSalesPage() {
         </Col>
       </Row>
 
-      {/* Action Buttons */}
       <Card style={{ marginBottom: 24 }}>
         <Space wrap>
           <Tooltip title="Export all your sales to Excel">
@@ -292,7 +288,6 @@ function CustomerSalesPage() {
         </Space>
       </Card>
 
-      {/* Sales Table */}
       <Card>
         <Spin spinning={loading}>
           {sales.length === 0 ? (
@@ -312,7 +307,6 @@ function CustomerSalesPage() {
         </Spin>
       </Card>
 
-      {/* Info Message */}
       <Card style={{ marginTop: 24, background: '#e6f7ff' }}>
         <Row>
           <Col span={24}>

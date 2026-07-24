@@ -31,7 +31,7 @@ import {
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import api from "../../api/axiosConfig";
+import api from "../../services/apiClient";
 import usePermissions from "../../hooks/usePermissions";
 
 const formatMoney = (value) => `Rs. ${Number(value ?? 0).toFixed(2)}`;
@@ -536,7 +536,7 @@ function VendorList() {
                   { pattern: /^\S+$/, message: "Username cannot contain spaces" },
                 ]}
               >
-                <Input placeholder="e.g.: ali_mills" size="large" />
+                <Input autoComplete="off" size="large" />
               </Form.Item>
 
               <Form.Item
@@ -547,7 +547,7 @@ function VendorList() {
                   { min: 6, message: "At least 6 characters" },
                 ]}
               >
-                <Input.Password placeholder="Secure password" size="large" />
+                <Input.Password autoComplete="new-password" size="large" />
               </Form.Item>
             </>
           )}

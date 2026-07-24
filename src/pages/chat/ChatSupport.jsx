@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge, Button, Card, Empty, Input, List, Space, Tag, Typography, message as antMessage, theme } from "antd";
 import { SendOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
-import api from "../../api/axiosConfig";
+import api from "../../services/apiClient";
 import PageHeader from "../../components/layout/PageHeader";
 
 const { Text, Title } = Typography;
@@ -68,7 +68,6 @@ function ChatSupport() {
       loadContacts();
     }, 5000);
     return () => clearInterval(contactsInterval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {

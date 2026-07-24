@@ -15,11 +15,11 @@ import {
 } from "@ant-design/icons";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import api from "../../api/axiosConfig";
-import { loginSuccess } from "../../store/authSlice";
-import { useAppTheme } from "../../theme/AppThemeContext";
-import { firstAllowedPath } from "../../utils/accessModules";
-import { APP_NAME } from "../../utils/industryConfig";
+import api from "../../services/apiClient";
+import { loginSuccess } from "../../stores/authSlice";
+import { useAppTheme } from "../../styles/theme/AppThemeContext";
+import { firstAllowedPath } from "../../lib/accessModules";
+import { APP_NAME } from "../../constants/industryConfig";
 
 const { Title, Text, Paragraph } = Typography;
 
@@ -81,7 +81,7 @@ function Login() {
 
   const themeConfig = {
     token: {
-      colorPrimary: "#5b52d9",
+      colorPrimary: "#2563eb",
       colorBgBase: darkMode ? "#07111f" : "#eef2ff",
       colorTextBase: darkMode ? "#e5eef9" : "#0f172a",
       borderRadius: 16,
@@ -128,14 +128,14 @@ function Login() {
   return (
     <ConfigProvider theme={themeConfig}>
       <div
-        className="papertech-fade-in"
+        className="login-shell papertech-fade-in"
         style={{
           minHeight: "100vh",
           padding: isMobile ? 16 : 28,
           background:
             darkMode
-              ? "radial-gradient(circle at top left, rgba(91, 82, 217, 0.28), transparent 26%), radial-gradient(circle at 85% 10%, rgba(34, 197, 94, 0.16), transparent 24%), linear-gradient(135deg, #050b16 0%, #07111f 48%, #0b1528 100%)"
-              : "radial-gradient(circle at top left, rgba(91, 82, 217, 0.16), transparent 26%), radial-gradient(circle at 85% 10%, rgba(34, 197, 94, 0.12), transparent 24%), linear-gradient(135deg, #f7f8ff 0%, #eef2ff 48%, #ffffff 100%)",
+              ? "radial-gradient(circle at top left, rgba(96, 165, 250, 0.22), transparent 26%), radial-gradient(circle at 85% 10%, rgba(45, 212, 191, 0.12), transparent 24%), linear-gradient(135deg, #050b16 0%, #07111f 48%, #0b1528 100%)"
+              : "radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 26%), radial-gradient(circle at 85% 10%, rgba(5, 150, 105, 0.1), transparent 24%), linear-gradient(135deg, #f7f9fc 0%, #f4f7fb 48%, #ffffff 100%)",
           display: "grid",
           alignItems: "stretch",
         }}
@@ -165,6 +165,7 @@ function Login() {
             }}
           >
             <div
+              className="login-panel"
               style={{
                 position: "absolute",
                 inset: 0,
@@ -186,8 +187,8 @@ function Login() {
                     color: "#fff",
                     fontWeight: 900,
                     letterSpacing: 1,
-                    background: "linear-gradient(135deg, #5b52d9 0%, #10b981 100%)",
-                    boxShadow: "0 18px 40px rgba(91, 82, 217, 0.28)",
+                    background: "linear-gradient(135deg, #2563eb 0%, #059669 100%)",
+                    boxShadow: "0 18px 40px rgba(37, 99, 235, 0.24)",
                   }}
                 >
                   TS
@@ -231,7 +232,7 @@ function Login() {
                         "linear-gradient(180deg, color-mix(in srgb, var(--papertech-primary) 8%, var(--papertech-surface-strong)) 0%, var(--papertech-surface) 100%)",
                     }}
                   >
-                    <div style={{ color: "#5b52d9", fontSize: 20, marginBottom: 12 }}>
+                    <div style={{ color: "var(--papertech-primary)", fontSize: 20, marginBottom: 12 }}>
                       {item.icon}
                     </div>
                     <Title level={5} style={{ margin: 0 }}>
@@ -283,7 +284,7 @@ function Login() {
             <div style={{ width: "100%", maxWidth: 440 }}>
               <Card
                 bordered={false}
-                className="papertech-glass-strong"
+                className="login-card papertech-glass-strong"
                 style={{
                   borderRadius: 28,
                   padding: 4,
@@ -310,7 +311,8 @@ function Login() {
                     >
                       <Input
                         size="large"
-                        prefix={<UserOutlined style={{ color: "#5b52d9" }} />}
+                        autoComplete="username"
+                        prefix={<UserOutlined style={{ color: "var(--papertech-primary)" }} />}
                         placeholder="Enter your username"
                       />
                     </Form.Item>
@@ -322,7 +324,8 @@ function Login() {
                     >
                       <Input.Password
                         size="large"
-                        prefix={<LockOutlined style={{ color: "#5b52d9" }} />}
+                        autoComplete="current-password"
+                        prefix={<LockOutlined style={{ color: "var(--papertech-primary)" }} />}
                         placeholder="Enter your password"
                       />
                     </Form.Item>
@@ -340,18 +343,6 @@ function Login() {
                       </Button>
                     </Form.Item>
                   </Form>
-
-                  {/* <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      gap: 12,
-                      flexWrap: "wrap",
-                      color: "var(--papertech-text-muted)",
-                      fontSize: 12,
-                    }}
-                  >
-                  </div> */}
                 </div>
               </Card>
             </div>

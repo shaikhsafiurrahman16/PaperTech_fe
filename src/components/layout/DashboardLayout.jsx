@@ -22,12 +22,12 @@ import {
   LockOutlined,
 } from "@ant-design/icons";
 import { useSelector, useDispatch } from "react-redux";
-import { logout } from "../../store/authSlice";
+import { logout } from "../../stores/authSlice";
 import Sidebar from "./Sidebar";
-import { useAppTheme } from "../../theme/AppThemeContext";
-import api from "../../api/axiosConfig";
-import { firstAllowedPath, hasModuleAccess } from "../../utils/accessModules";
-import { APP_NAME } from "../../utils/industryConfig";
+import { useAppTheme } from "../../styles/theme/AppThemeContext";
+import api from "../../services/apiClient";
+import { firstAllowedPath, hasModuleAccess } from "../../lib/accessModules";
+import { APP_NAME } from "../../constants/industryConfig";
 
 const AdminDashboard = lazy(() => import("../../pages/dashboard/AdminDashboard"));
 const CustomerList = lazy(() => import("../../pages/customers/CustomerList"));
@@ -79,8 +79,8 @@ function DashboardLayout() {
 
   const themeToken = useMemo(
     () => ({
-      colorPrimary: darkMode ? "#8b7cff" : "#5b52d9",
-      colorSuccess: darkMode ? "#6ee7b7" : "#10b981",
+      colorPrimary: darkMode ? "#60a5fa" : "#2563eb",
+      colorSuccess: darkMode ? "#6ee7b7" : "#059669",
       colorWarning: darkMode ? "#fbbf24" : "#f59e0b",
       colorError: darkMode ? "#f87171" : "#ef4444",
       colorText: darkMode ? "#e5eef9" : "#0f172a",
@@ -274,14 +274,14 @@ function DashboardLayout() {
                 color: "#fff",
                 background:
                   "linear-gradient(135deg, var(--papertech-primary) 0%, var(--papertech-success) 100%)",
-                boxShadow: "0 16px 32px rgba(91, 82, 217, 0.32)",
+                boxShadow: "0 16px 32px color-mix(in srgb, var(--papertech-primary) 32%, transparent)",
               }}
             >
               TS
             </div>
             {!collapsed ? (
               <div>
-                <Typography.Text strong style={{ display: "block", letterSpacing: 1.2 }}>
+                <Typography.Text className="papertech-brand-title" strong style={{ display: "block", letterSpacing: 1.2 }}>
                   {APP_NAME.toUpperCase()}
                 </Typography.Text>
               </div>

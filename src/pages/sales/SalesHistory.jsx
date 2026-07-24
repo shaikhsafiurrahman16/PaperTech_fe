@@ -30,7 +30,7 @@ import {
   EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
-import api from "../../api/axiosConfig";
+import api from "../../services/apiClient";
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -545,7 +545,6 @@ function SalesHistory() {
         </div>
       </Card>
 
-      {/* Statistics */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} md={8}>
           <Card>
@@ -578,7 +577,6 @@ function SalesHistory() {
         </Col>
       </Row>
 
-      {/* Sales Table */}
       <Card>
         <Spin spinning={pageLoading}>
           <Table
@@ -597,7 +595,6 @@ function SalesHistory() {
         </Spin>
       </Card>
 
-      {/* Create Sale Drawer */}
       <Drawer
         title={editingSale ? "Edit Sale" : "Create Sale"}
         open={drawerOpen}

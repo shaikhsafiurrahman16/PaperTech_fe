@@ -28,7 +28,7 @@ import {
 import * as XLSX from "xlsx";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import api from "../../api/axiosConfig";
+import api from "../../services/apiClient";
 import usePermissions from "../../hooks/usePermissions";
 
 const formatMoney = (value) => `Rs. ${Number(value ?? 0).toFixed(2)}`;
@@ -303,7 +303,6 @@ function CustomerList() {
         <Typography.Title level={2}>Customers Management</Typography.Title>
       </div>
 
-      {/* Statistics */}
       <Row gutter={16} style={{ marginBottom: 24 }}>
         <Col xs={24} sm={12} md={6}>
           <Card>
@@ -392,7 +391,6 @@ function CustomerList() {
         </div>
       </Card>
 
-      {/* Customers Table */}
       <Card>
         <Spin spinning={pageLoading}>
           <Table
@@ -408,7 +406,6 @@ function CustomerList() {
         </Spin>
       </Card>
 
-      {/* Create Customer Drawer */}
       <Drawer
         title={editingCustomer ? "👥 Edit Customer" : "👥 Add New Customer"}
         open={drawerOpen}
@@ -502,7 +499,7 @@ function CustomerList() {
                   },
                 ]}
               >
-                <Input placeholder="e.g.: ahmad_shop" size="large" />
+                <Input autoComplete="off" size="large" />
               </Form.Item>
 
               <Form.Item
@@ -513,7 +510,7 @@ function CustomerList() {
                   { min: 6, message: "At least 6 characters" },
                 ]}
               >
-                <Input.Password placeholder="Secure password" size="large" />
+                <Input.Password autoComplete="new-password" size="large" />
               </Form.Item>
             </>
           )}

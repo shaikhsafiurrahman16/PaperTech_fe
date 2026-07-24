@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Select, Table, Card, Typography, message, Row, Col, Statistic, Spin, Empty, Tag } from 'antd';
-import api from '../../api/axiosConfig';
+import api from '../../services/apiClient';
 
 const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
 
@@ -97,7 +97,6 @@ function LedgerView() {
         <Typography.Title level={2}>Customer Ledger</Typography.Title>
       </div>
 
-      {/* Customer Selection */}
       <Card style={{ marginBottom: 24 }}>
         <Select
           placeholder="Select a customer"
@@ -111,7 +110,6 @@ function LedgerView() {
         />
       </Card>
 
-      {/* Customer Statistics */}
       {selectedCustomer && (
         <Row gutter={16} style={{ marginBottom: 24 }}>
           <Col xs={24} sm={12} md={8}>
@@ -147,7 +145,6 @@ function LedgerView() {
         </Row>
       )}
 
-      {/* Ledger Table */}
       {selectedCustomer && (
         <Card title="Ledger Entries">
           <Spin spinning={loading}>

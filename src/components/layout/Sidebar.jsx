@@ -18,7 +18,7 @@ import {
 } from "@ant-design/icons";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import { hasModuleAccess } from "../../utils/accessModules";
+import { hasModuleAccess } from "../../lib/accessModules";
 
 function Sidebar({
   darkMode,

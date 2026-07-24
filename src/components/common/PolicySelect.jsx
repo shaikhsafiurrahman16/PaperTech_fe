@@ -1,5 +1,5 @@
 import { Button, Divider, Select, Space } from "antd";
-import { ACCESS_ACTIONS, getActionsForModule } from "../../utils/accessModules";
+import { ACCESS_ACTIONS, getActionsForModule } from "../../lib/accessModules";
 
 function PolicySelect({ modules = [], value = [], onChange, placeholder = "Select policies" }) {
   const permissionKeys = modules.flatMap((moduleItem) =>

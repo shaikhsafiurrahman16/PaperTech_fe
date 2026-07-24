@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Card, Typography, Table, Button, Space, message, Spin, Descriptions } from "antd";
 import { ArrowLeftOutlined, DownloadOutlined, PrinterOutlined } from "@ant-design/icons";
-import api from "../../api/axiosConfig";
+import api from "../../services/apiClient";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 

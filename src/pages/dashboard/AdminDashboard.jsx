@@ -9,7 +9,7 @@ import {
   UserOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
-import api from "../../api/axiosConfig";
+import api from "../../services/apiClient";
 import PageHeader from "../../components/layout/PageHeader";
 
 function useCountUp(targetValue) {

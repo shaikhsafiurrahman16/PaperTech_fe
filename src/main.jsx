@@ -6,8 +6,8 @@ import { App as AntApp } from "antd";
 import "antd/dist/reset.css";
 import "./index.css";
 import App from "./App";
-import store from "./store";
-import { AppThemeProvider } from "./theme/AppThemeContext";
+import store from "./stores";
+import { AppThemeProvider } from "./styles/theme/AppThemeContext";
 
 const Router = window.papertechDesktop ? HashRouter : BrowserRouter;
 

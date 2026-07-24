@@ -13,10 +13,10 @@ import {
 } from "antd";
 import { EditOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
-import api from "../../api/axiosConfig";
+import api from "../../services/apiClient";
 import PageHeader from "../../components/layout/PageHeader";
 import PolicySelect from "../../components/common/PolicySelect";
-import { ACCESS_ACTIONS, ACCESS_MODULES, getActionsForModule, getModulesForPolicyCreator } from "../../utils/accessModules";
+import { ACCESS_ACTIONS, ACCESS_MODULES, getActionsForModule, getModulesForPolicyCreator } from "../../lib/accessModules";
 
 function PoliciesPage() {
   const { message } = App.useApp();

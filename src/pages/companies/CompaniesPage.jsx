@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import { Button, Card, Form, Input, Modal, Popconfirm, Select, Space, Table, Tag, App } from 'antd';
-import api from '../../api/axiosConfig';
+import api from '../../services/apiClient';
 import PageHeader from '../../components/layout/PageHeader';
 import PolicyAssignSelect from '../../components/common/PolicyAssignSelect';
-import { INDUSTRY_TYPES } from '../../utils/industryConfig';
+import { INDUSTRY_TYPES } from '../../constants/industryConfig';
 
 function CompaniesPage() {
   const { message } = App.useApp();
@@ -193,10 +193,10 @@ function CompaniesPage() {
             <Input />
           </Form.Item>
           <Form.Item name="admin_username" label="Company Admin Username" rules={[{ required: true, message: 'Admin username is required' }]}>
-            <Input />
+            <Input autoComplete="off" />
           </Form.Item>
           <Form.Item name="admin_password" label="Company Admin Password" rules={[{ required: true, message: 'Admin password is required' }, { min: 6, message: 'Min 6 chars' }]}>
-            <Input.Password />
+            <Input.Password autoComplete="new-password" />
           </Form.Item>
           <Form.Item
             name="policy_id"
@@ -221,10 +221,10 @@ function CompaniesPage() {
           <Form.Item name="address" label="Address"><Input /></Form.Item>
           <Form.Item name="phone" label="Phone"><Input /></Form.Item>
           <Form.Item name="admin_username" label="Company Admin Username" rules={[{ required: true, message: 'Admin username is required' }]}>
-            <Input />
+            <Input autoComplete="off" />
           </Form.Item>
           <Form.Item name="admin_password" label="New Admin Password" rules={[{ min: 6, message: 'Min 6 chars' }]}>
-            <Input.Password placeholder="Leave blank to keep current password" />
+            <Input.Password autoComplete="new-password" />
           </Form.Item>
           <Form.Item name="status" label="Status" rules={[{ required: true }]}>
             <Select

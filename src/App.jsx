@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { message } from 'antd';
 import Login from './pages/auth/Login';
 import DashboardLayout from './components/layout/DashboardLayout';
-import { firstAllowedPath } from './utils/accessModules';
+import { firstAllowedPath } from './lib/accessModules';
 import useOverlayFormUx from './hooks/useOverlayFormUx';
 
 const adminHomeRoutes = [

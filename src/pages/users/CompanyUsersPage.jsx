@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { App, Button, Card, Form, Input, Modal, Popconfirm, Space, Table, Tag } from "antd";
 import { EditOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
-import api from "../../api/axiosConfig";
+import api from "../../services/apiClient";
 import PageHeader from "../../components/layout/PageHeader";
 import PolicyAssignSelect from "../../components/common/PolicyAssignSelect";
 import usePermissions from "../../hooks/usePermissions";
@@ -177,14 +177,14 @@ function CompanyUsersPage() {
             <Input.TextArea rows={3} />
           </Form.Item>
           <Form.Item name="username" label="Username" rules={[{ required: true, message: "Username is required" }]}>
-            <Input />
+            <Input autoComplete="off" />
           </Form.Item>
           <Form.Item
             name="password"
             label={editingUser ? "New Password" : "Password"}
             rules={editingUser ? [] : [{ required: true, message: "Password is required" }, { min: 6, message: "Min 6 chars" }]}
           >
-            <Input.Password placeholder={editingUser ? "Leave blank to keep old password" : ""} />
+            <Input.Password autoComplete="new-password" />
           </Form.Item>
           <Form.Item
             name="policy_id"

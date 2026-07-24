@@ -1,8 +1,8 @@
 :root {
   color-scheme: light;
-  --papertech-bg: #eef2ff;
+  --papertech-bg: #f4f7fb;
   --papertech-bg-elevated: rgba(255, 255, 255, 0.72);
-  --papertech-surface: rgba(255, 255, 255, 0.9);
+  --papertech-surface: rgba(255, 255, 255, 0.92);
   --papertech-surface-strong: #ffffff;
   --papertech-surface-muted: #f8fafc;
   --papertech-text: #0f172a;
@@ -11,14 +11,14 @@
   --papertech-border-strong: rgba(15, 23, 42, 0.14);
   --papertech-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
   --papertech-shadow-soft: 0 10px 30px rgba(15, 23, 42, 0.08);
-  --papertech-primary: #5b52d9;
-  --papertech-primary-strong: #4338ca;
-  --papertech-success: #10b981;
+  --papertech-primary: #2563eb;
+  --papertech-primary-strong: #1d4ed8;
+  --papertech-success: #059669;
   --papertech-warning: #f59e0b;
   --papertech-danger: #ef4444;
-  --papertech-radius-lg: 24px;
-  --papertech-radius-md: 18px;
-  --papertech-radius-sm: 14px;
+  --papertech-radius-lg: 18px;
+  --papertech-radius-md: 12px;
+  --papertech-radius-sm: 8px;
 }
 
 [data-theme="dark"] {
@@ -34,8 +34,8 @@
   --papertech-border-strong: rgba(148, 163, 184, 0.2);
   --papertech-shadow: 0 28px 84px rgba(0, 0, 0, 0.42);
   --papertech-shadow-soft: 0 12px 34px rgba(0, 0, 0, 0.26);
-  --papertech-primary: #8b7cff;
-  --papertech-primary-strong: #a78bfa;
+  --papertech-primary: #60a5fa;
+  --papertech-primary-strong: #93c5fd;
 }
 
 * {
@@ -51,8 +51,8 @@ body {
   min-height: 100vh;
   color: var(--papertech-text);
   background:
-    radial-gradient(circle at top left, rgba(91, 82, 217, 0.22), transparent 30%),
-    radial-gradient(circle at 85% 0%, rgba(16, 185, 129, 0.16), transparent 22%),
+    radial-gradient(circle at top left, rgba(37, 99, 235, 0.14), transparent 30%),
+    radial-gradient(circle at 85% 0%, rgba(5, 150, 105, 0.12), transparent 22%),
     linear-gradient(180deg, var(--papertech-bg) 0%, var(--papertech-bg) 100%);
   font-family:
     Inter,
@@ -69,8 +69,8 @@ body {
 
 body.dark {
   background:
-    radial-gradient(circle at top left, rgba(91, 82, 217, 0.2), transparent 28%),
-    radial-gradient(circle at 85% 0%, rgba(34, 197, 94, 0.12), transparent 20%),
+    radial-gradient(circle at top left, rgba(96, 165, 250, 0.16), transparent 28%),
+    radial-gradient(circle at 85% 0%, rgba(45, 212, 191, 0.1), transparent 20%),
     linear-gradient(180deg, #07111f 0%, #060d17 100%);
 }
 
@@ -102,6 +102,15 @@ a {
 .papertech-page {
   min-height: 100%;
   padding: 0;
+}
+
+.papertech-brand-title {
+  color: var(--papertech-text) !important;
+}
+
+[data-theme="dark"] .papertech-brand-title,
+body.dark .papertech-brand-title {
+  color: #f8fafc !important;
 }
 
 .papertech-page__surface {
@@ -188,6 +197,7 @@ a {
 
 .ant-card .ant-card-body {
   position: relative;
+  padding: 20px;
 }
 
 .ant-card-head {
@@ -216,6 +226,12 @@ a {
   background: color-mix(in srgb, var(--papertech-surface-strong) 95%, transparent) !important;
   border-color: var(--papertech-border-strong) !important;
   color: var(--papertech-text) !important;
+  border-radius: var(--papertech-radius-sm) !important;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease,
+    background-color 160ms ease;
 }
 
 .ant-input::placeholder,
@@ -225,10 +241,38 @@ a {
 
 .ant-form-item-label > label {
   color: var(--papertech-text) !important;
+  font-weight: 650;
+}
+
+.ant-input:hover,
+.ant-input-number:hover,
+.ant-select-selector:hover,
+.ant-picker:hover,
+.ant-input-affix-wrapper:hover {
+  border-color: color-mix(in srgb, var(--papertech-primary) 58%, var(--papertech-border-strong)) !important;
+}
+
+.ant-input:focus,
+.ant-input-focused,
+.ant-input-number-focused,
+.ant-select-focused .ant-select-selector,
+.ant-picker-focused,
+.ant-input-affix-wrapper-focused {
+  border-color: var(--papertech-primary) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--papertech-primary) 14%, transparent) !important;
+}
+
+.ant-form-item-has-error .ant-input,
+.ant-form-item-has-error .ant-input-number,
+.ant-form-item-has-error .ant-input-affix-wrapper,
+.ant-form-item-has-error .ant-select-selector {
+  border-color: var(--papertech-danger) !important;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--papertech-danger) 12%, transparent) !important;
 }
 
 .ant-btn {
-  border-radius: 999px;
+  border-radius: var(--papertech-radius-sm);
+  font-weight: 650;
   transition:
     transform 160ms ease,
     box-shadow 160ms ease,
@@ -258,6 +302,12 @@ a {
   color: var(--papertech-text) !important;
 }
 
+.ant-modal-mask,
+.ant-drawer-mask {
+  background: rgba(2, 6, 23, 0.48) !important;
+  backdrop-filter: blur(10px);
+}
+
 .ant-modal-header,
 .ant-modal-footer,
 .ant-drawer-header,
@@ -278,6 +328,29 @@ a {
   max-width: min(96vw, 900px);
 }
 
+.ant-modal-content {
+  border: 1px solid var(--papertech-border) !important;
+  border-radius: var(--papertech-radius-lg) !important;
+  box-shadow: var(--papertech-shadow) !important;
+  padding: 24px !important;
+  overflow: hidden;
+}
+
+.ant-modal-title {
+  color: var(--papertech-text) !important;
+  font-size: 18px !important;
+  font-weight: 750 !important;
+}
+
+.ant-modal-body {
+  padding-top: 14px !important;
+}
+
+.ant-modal .ant-form {
+  display: grid;
+  gap: 2px;
+}
+
 .ant-drawer .ant-drawer-content-wrapper {
   position: fixed !important;
   top: 50% !important;
@@ -295,11 +368,23 @@ a {
 .ant-drawer .ant-drawer-content {
   border-radius: var(--papertech-radius-lg);
   overflow: hidden;
+  border: 1px solid var(--papertech-border);
 }
 
 .ant-drawer .ant-drawer-body {
   max-height: calc(100vh - 128px);
   overflow: auto;
+  padding: 24px;
+}
+
+.ant-drawer-header {
+  padding: 20px 24px !important;
+}
+
+.ant-drawer-title {
+  color: var(--papertech-text) !important;
+  font-size: 18px;
+  font-weight: 750;
 }
 
 .ant-message-notice-content {
@@ -354,5 +439,88 @@ a {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+.login-shell {
+  animation: loginFadeIn 520ms ease-out both;
+}
+
+.login-panel {
+  animation: loginSlideUp 640ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.login-card {
+  animation: loginSlideUp 720ms cubic-bezier(0.22, 1, 0.36, 1) 80ms both;
+}
+
+.login-card .ant-input-affix-wrapper,
+.login-card .ant-btn {
+  transition:
+    transform 180ms ease,
+    box-shadow 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease;
+}
+
+.login-card .ant-input-affix-wrapper:hover,
+.login-card .ant-input-affix-wrapper-focused {
+  transform: translateY(-1px);
+}
+
+.login-card .ant-btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 36px color-mix(in srgb, var(--papertech-primary) 32%, transparent);
+}
+
+@keyframes loginFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes loginSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+  .ant-layout {
+    min-width: 0;
+  }
+
+  .ant-layout-content {
+    padding: 14px !important;
+  }
+
+  .papertech-page__surface {
+    padding: 16px !important;
+    border-radius: 14px;
+  }
+
+  .ant-card .ant-card-body {
+    padding: 16px;
+  }
+
+  .ant-modal-wrap {
+    padding: 14px;
+  }
+
+  .ant-modal-content,
+  .ant-drawer .ant-drawer-content {
+    border-radius: 14px !important;
+  }
+
+  .ant-table-wrapper {
+    overflow-x: auto;
   }
 }
