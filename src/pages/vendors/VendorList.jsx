@@ -3,7 +3,7 @@ import {
   Button,
   Card,
   Col,
-  Drawer,
+  Modal,
   Form,
   Input,
   InputNumber,
@@ -40,9 +40,9 @@ function VendorList() {
   const [vendors, setVendors] = useState([]);
   const [ledger, setLedger] = useState([]);
   const [selectedVendor, setSelectedVendor] = useState(null);
-  const [vendorDrawerOpen, setVendorDrawerOpen] = useState(false);
-  const [ledgerDrawerOpen, setLedgerDrawerOpen] = useState(false);
-  const [paymentDrawerOpen, setPaymentDrawerOpen] = useState(false);
+  const [vendorModalOpen, setVendorModalOpen] = useState(false);
+  const [ledgerModalOpen, setLedgerModalOpen] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [editingVendor, setEditingVendor] = useState(null);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(false);
@@ -73,7 +73,7 @@ function VendorList() {
     setEditingVendor(null);
     vendorForm.resetFields();
     vendorForm.setFieldsValue({ opening_balance: 0, username: "", password: "" });
-    setVendorDrawerOpen(true);
+    setVendorModalOpen(true);
   };
 
   const handleEditVendor = (vendor) => {
@@ -85,7 +85,7 @@ function VendorList() {
       address: vendor.address,
       cnic: vendor.cnic,
     });
-    setVendorDrawerOpen(true);
+    setVendorModalOpen(true);
   };
 
   const handleDeleteVendor = async (id) => {
@@ -114,7 +114,7 @@ function VendorList() {
         message.success("Vendor created successfully");
       }
 
-      setVendorDrawerOpen(false);
+      setVendorModalOpen(false);
       setEditingVendor(null);
       vendorForm.resetFields();
       fetchVendors();
@@ -128,7 +128,7 @@ function VendorList() {
   const openLedger = async (vendor) => {
     try {
       setSelectedVendor(vendor);
-      setLedgerDrawerOpen(true);
+      setLedgerModalOpen(true);
       setLedgerLoading(true);
       const response = await api.get(`/vendor-ledger/${vendor.id}`);
       setLedger(response.data.data?.ledger || []);
@@ -139,11 +139,11 @@ function VendorList() {
     }
   };
 
-  const openPaymentDrawer = (vendor) => {
+  const openPaymentModal = (vendor) => {
     setSelectedVendor(vendor);
     paymentForm.resetFields();
     paymentForm.setFieldsValue({ vendor_id: vendor.id, payment_method: "cash" });
-    setPaymentDrawerOpen(true);
+    setPaymentModalOpen(true);
   };
 
   const handleVendorPayment = async (values) => {
@@ -156,7 +156,7 @@ function VendorList() {
         notes: values.notes,
       });
       message.success("Vendor payment saved successfully");
-      setPaymentDrawerOpen(false);
+      setPaymentModalOpen(false);
       setSelectedVendor(null);
       paymentForm.resetFields();
       fetchVendors();
@@ -170,27 +170,27 @@ function VendorList() {
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredVendors = normalizedSearch
     ? vendors.filter((vendor) =>
-        [
-          vendor.company_name,
-          vendor.full_name,
-          vendor.phone,
-          vendor.username,
-          vendor.cnic,
-          vendor.address,
-        ]
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
-      )
+      [
+        vendor.company_name,
+        vendor.full_name,
+        vendor.phone,
+        vendor.username,
+        vendor.cnic,
+        vendor.address,
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedSearch))
+    )
     : vendors;
 
   const payableVendors = vendors.filter((vendor) => Number(vendor.current_balance || 0) > 0).length;
   const totalOpeningBalance = vendors.reduce(
     (sum, vendor) => sum + Number(vendor.opening_balance || 0),
-    0,
+    0
   );
   const totalPayable = vendors.reduce(
     (sum, vendor) => sum + Number(vendor.current_balance || 0),
-    0,
+    0
   );
 
   const exportToExcel = () => {
@@ -253,6 +253,62 @@ function VendorList() {
     message.success("Exported to PDF successfully");
   };
 
+  const exportLedgerToExcel = () => {
+    if (ledger.length === 0) {
+      message.warning("No ledger data to export");
+      return;
+    }
+
+    const data = ledger.map((entry) => ({
+      Date: entry.created_at ? new Date(entry.created_at).toLocaleString("en-US") : "-",
+      Type: entry.transaction_type || "-",
+      Reference: entry.purchase_number || entry.remarks || "-",
+      Amount: formatMoney(entry.amount),
+      "Previous Balance": formatMoney(entry.previous_balance),
+      "Current Balance": formatMoney(entry.current_balance),
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(data);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Ledger");
+    XLSX.writeFile(wb, `${selectedVendor?.company_name || "Vendor"}_Ledger_${new Date().toISOString().split("T")[0]}.xlsx`);
+    message.success("Ledger exported to Excel");
+  };
+
+  const exportLedgerToPDF = () => {
+    if (ledger.length === 0) {
+      message.warning("No ledger data to export");
+      return;
+    }
+
+    const doc = new jsPDF();
+    doc.setFontSize(18);
+    doc.text("TRADESTACK", 14, 20);
+    doc.setFontSize(14);
+    doc.text(`${selectedVendor?.company_name || "Vendor"} - Ledger`, 14, 28);
+    doc.setFontSize(9);
+    doc.text(`Report Date: ${new Date().toLocaleDateString("en-US")}`, 14, 34);
+
+    autoTable(doc, {
+      head: [["Date", "Type", "Reference", "Amount", "Previous", "Current Balance"]],
+      body: ledger.map((entry) => [
+        entry.created_at ? new Date(entry.created_at).toLocaleString("en-US") : "-",
+        entry.transaction_type || "-",
+        entry.purchase_number || entry.remarks || "-",
+        formatMoney(entry.amount),
+        formatMoney(entry.previous_balance),
+        formatMoney(entry.current_balance),
+      ]),
+      startY: 40,
+      margin: 10,
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [37, 85, 135] },
+    });
+
+    doc.save(`${selectedVendor?.company_name || "Vendor"}_Ledger_${new Date().toISOString().split("T")[0]}.pdf`);
+    message.success("Ledger exported to PDF");
+  };
+
   const columns = [
     {
       title: "Company",
@@ -300,7 +356,7 @@ function VendorList() {
                 type="text"
                 icon={<WalletOutlined />}
                 size="small"
-                onClick={() => openPaymentDrawer(record)}
+                onClick={() => openPaymentModal(record)}
                 disabled={Number(record.current_balance || 0) <= 0}
               />
             </Tooltip>
@@ -453,102 +509,148 @@ function VendorList() {
         </Spin>
       </Card>
 
-      <Drawer
+      <Modal
         title={editingVendor ? "Edit Vendor" : "Add New Vendor"}
-        open={vendorDrawerOpen}
-        width={500}
-        onClose={() => {
-          setVendorDrawerOpen(false);
+        open={vendorModalOpen}
+        onCancel={() => {
+          setVendorModalOpen(false);
           setEditingVendor(null);
           vendorForm.resetFields();
         }}
-        bodyStyle={{ paddingBottom: 80 }}
+        centered
+        width={560}
+        styles={{
+          footer: {
+            padding: "16px 24px",
+            borderTop: "1px solid #f0f0f0",
+            display: "flex",
+            justifyContent: "right",
+            gap: "12px",
+          },
+          body: {
+            padding: "16px 24px 8px",
+          },
+        }}
+        footer={
+          <>
+            <Button
+              onClick={() => {
+                setVendorModalOpen(false);
+                vendorForm.resetFields();
+              }}
+              size="large"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              loading={loading}
+              size="large"
+              onClick={() => vendorForm.submit()}
+            >
+              {editingVendor ? "Update Vendor" : "Save Vendor"}
+            </Button>
+          </>
+        }
       >
-        <Form layout="vertical" form={vendorForm} onFinish={handleSaveVendor} autoComplete="off">
-          <Form.Item
-            name="company_name"
-            label="Company Name"
-            rules={[
-              { required: true, message: "Company name is required" },
-              { whitespace: true, message: "Company name cannot be empty spaces" },
-            ]}
-          >
-            <Input placeholder="e.g.: Ali Paper Mills" size="large" />
-          </Form.Item>
+        <Form layout="vertical" form={vendorForm} onFinish={handleSaveVendor} autoComplete="off" style={{ marginTop: "8px" }}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="company_name"
+                label="Company Name"
+                rules={[
+                  { required: true, message: "Company name is required" },
+                  { whitespace: true, message: "Cannot be empty spaces" },
+                ]}
+              >
+                <Input placeholder="e.g.: Ali Paper Mills" size="large" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="full_name"
+                label="Contact Person"
+                rules={[
+                  { required: true, message: "Contact person is required" },
+                  { whitespace: true, message: "Cannot be empty spaces" },
+                ]}
+              >
+                <Input placeholder="e.g.: Ahmad Ali" size="large" />
+              </Form.Item>
+            </Col>
+          </Row>
 
-          <Form.Item
-            name="full_name"
-            label="Contact Person"
-            rules={[
-              { required: true, message: "Contact person is required" },
-              { whitespace: true, message: "Contact person cannot be empty spaces" },
-            ]}
-          >
-            <Input placeholder="e.g.: Ahmad Ali" size="large" />
-          </Form.Item>
-
-          <Form.Item
-            name="phone"
-            label="Phone Number"
-            rules={[
-              { required: true, message: "Phone is required" },
-              {
-                pattern: /^\d{1,11}$/,
-                message: "Phone number must be digits only and maximum 11 digits",
-              },
-            ]}
-          >
-            <Input maxLength={11} placeholder="e.g.: 03001234567" size="large" />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="phone"
+                label="Phone Number"
+                rules={[
+                  { required: true, message: "Phone is required" },
+                  { pattern: /^\d{1,11}$/, message: "Digits only, max 11" },
+                ]}
+              >
+                <Input maxLength={11} placeholder="03001234567" size="large" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="cnic"
+                label="CNIC"
+                rules={[
+                  { pattern: /^\d{1,13}$/, message: "Digits only, max 13" },
+                ]}
+              >
+                <Input maxLength={13} placeholder="1234512345671" size="large" />
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Form.Item name="address" label="Address">
-            <Input.TextArea rows={2} placeholder="Enter vendor address" />
-          </Form.Item>
-
-          <Form.Item
-            name="cnic"
-            label="CNIC"
-            rules={[
-              {
-                pattern: /^\d{1,13}$/,
-                message: "CNIC must be digits only and maximum 13 digits",
-              },
-            ]}
-          >
-            <Input maxLength={13} placeholder="e.g.: 1234512345671" />
+            <Input.TextArea rows={2} placeholder="Enter vendor address" style={{ resize: "none" }} />
           </Form.Item>
 
           {!editingVendor && (
             <>
-              <Form.Item
-                name="opening_balance"
-                label="Opening Balance"
-                rules={[{ type: "number", min: 0, message: "Enter a valid number" }]}
-              >
-                <InputNumber min={0} style={{ width: "100%" }} size="large" prefix="Rs. " />
-              </Form.Item>
+              <Row gutter={16}>
+                <Col span={24}>
+                  <Form.Item
+                    name="opening_balance"
+                    label="Opening Balance"
+                    rules={[{ type: "number", min: 0, message: "Enter a valid number" }]}
+                  >
+                    <InputNumber placeholder="e.g.: 50000" min={0} style={{ width: "100%" }} size="large" prefix="Rs. " />
+                  </Form.Item>
+                </Col>
+              </Row>
 
-              <Form.Item
-                name="username"
-                label="Username"
-                rules={[
-                  { required: true, message: "Username is required" },
-                  { pattern: /^\S+$/, message: "Username cannot contain spaces" },
-                ]}
-              >
-                <Input autoComplete="new-password" size="large" />
-              </Form.Item>
-
-              <Form.Item
-                name="password"
-                label="Password"
-                rules={[
-                  { required: true, message: "Password is required" },
-                  { min: 6, message: "At least 6 characters" },
-                ]}
-              >
-                <Input.Password autoComplete="new-password" size="large" />
-              </Form.Item>
+              <Row gutter={16}>
+                <Col span={12}>
+                  <Form.Item
+                    name="username"
+                    label="Username"
+                    rules={[
+                      { required: true, message: "Username is required" },
+                      { pattern: /^\S+$/, message: "Cannot contain spaces" },
+                    ]}
+                  >
+                    <Input placeholder="Enter username" autoComplete="new-password" size="large" />
+                  </Form.Item>
+                </Col>
+                <Col span={12}>
+                  <Form.Item
+                    name="password"
+                    label="Password"
+                    rules={[
+                      { required: true, message: "Password is required" },
+                      { min: 6, message: "At least 6 characters" },
+                    ]}
+                  >
+                    <Input.Password placeholder="Enter password" autoComplete="new-password" size="large" />
+                  </Form.Item>
+                </Col>
+              </Row>
             </>
           )}
 
@@ -557,33 +659,51 @@ function VendorList() {
               <Input value={editingVendor.username} disabled size="large" />
             </Form.Item>
           )}
-
-          <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-            <Button
-              onClick={() => {
-                setVendorDrawerOpen(false);
-                vendorForm.resetFields();
-              }}
-              size="large"
-            >
-              Cancel
-            </Button>
-            <Button type="primary" htmlType="submit" loading={loading} size="large">
-              Save
-            </Button>
-          </Space>
         </Form>
-      </Drawer>
+      </Modal>
 
-      <Drawer
+      <Modal
         title={selectedVendor ? `${selectedVendor.company_name} Ledger` : "Vendor Ledger"}
-        open={ledgerDrawerOpen}
-        width={860}
-        onClose={() => {
-          setLedgerDrawerOpen(false);
+        open={ledgerModalOpen}
+        onCancel={() => {
+          setLedgerModalOpen(false);
           setSelectedVendor(null);
           setLedger([]);
         }}
+        centered
+        width={860}
+        styles={{
+          footer: {
+            padding: "16px 24px",
+            borderTop: "1px solid #f0f0f0",
+            display: "flex",
+            justifyContent: "right",
+            gap: "12px",
+          },
+          body: {
+            padding: "16px 24px 24px",
+          },
+        }}
+        footer={
+          <>
+            <Button icon={<FileExcelOutlined />} size="large" onClick={exportLedgerToExcel}>
+              Excel
+            </Button>
+            <Button icon={<FilePdfOutlined />} danger size="large" onClick={exportLedgerToPDF}>
+              PDF
+            </Button>
+            <Button
+              size="large"
+              onClick={() => {
+                setLedgerModalOpen(false);
+                setSelectedVendor(null);
+                setLedger([]);
+              }}
+            >
+              Close
+            </Button>
+          </>
+        }
       >
         <Spin spinning={ledgerLoading}>
           <Table
@@ -597,21 +717,54 @@ function VendorList() {
             className="papertech-table-wrapper"
           />
         </Spin>
-      </Drawer>
+      </Modal>
 
-      <Drawer
+      <Modal
         title={selectedVendor ? `Pay ${selectedVendor.company_name}` : "Vendor Payment"}
-        open={paymentDrawerOpen}
-        width={420}
-        onClose={() => {
-          setPaymentDrawerOpen(false);
+        open={paymentModalOpen}
+        onCancel={() => {
+          setPaymentModalOpen(false);
           setSelectedVendor(null);
           paymentForm.resetFields();
         }}
-        bodyStyle={{ paddingBottom: 80 }}
+        centered
+        width={520}
+        styles={{
+          footer: {
+            padding: "16px 24px",
+            borderTop: "1px solid #f0f0f0",
+            display: "flex",
+            justifyContent: "center",
+            gap: "12px",
+          },
+          body: {
+            padding: "16px 24px 8px",
+          },
+        }}
+        footer={
+          <>
+            <Button
+              onClick={() => {
+                setPaymentModalOpen(false);
+                paymentForm.resetFields();
+              }}
+              size="large"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              loading={loading}
+              size="large"
+              onClick={() => paymentForm.submit()}
+            >
+              Save Payment
+            </Button>
+          </>
+        }
       >
         {selectedVendor && (
-          <Card style={{ marginBottom: 20 }}>
+          <Card style={{ marginBottom: 16 }}>
             <Statistic
               title="Current Payable"
               value={Number(selectedVendor.current_balance || 0)}
@@ -621,43 +774,40 @@ function VendorList() {
           </Card>
         )}
 
-        <Form layout="vertical" form={paymentForm} onFinish={handleVendorPayment} autoComplete="off">
-          <Form.Item
-            name="amount"
-            label="Payment Amount"
-            rules={[
-              { required: true, message: "Payment amount is required" },
-              { type: "number", min: 1, message: "Payment amount must be greater than zero" },
-            ]}
-          >
-            <InputNumber min={1} style={{ width: "100%" }} size="large" prefix="Rs. " />
-          </Form.Item>
-
-          <Form.Item name="payment_method" label="Payment Method">
-            <Select
-              size="large"
-              options={[
-                { label: "Cash", value: "cash" },
-                { label: "Bank", value: "bank" },
-                { label: "Cheque", value: "cheque" },
-              ]}
-            />
-          </Form.Item>
+        <Form layout="vertical" form={paymentForm} onFinish={handleVendorPayment} autoComplete="off" style={{ marginTop: "8px" }}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="amount"
+                label="Payment Amount"
+                rules={[
+                  { required: true, message: "Payment amount is required" },
+                  { type: "number", min: 1, message: "Must be greater than zero" },
+                ]}
+              >
+                <InputNumber placeholder="e.g.: 10000" min={1} style={{ width: "100%" }} size="large" prefix="Rs. " />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="payment_method" label="Payment Method">
+                <Select
+                  size="large"
+                  placeholder="Select method"
+                  options={[
+                    { label: "Cash", value: "cash" },
+                    { label: "Bank", value: "bank" },
+                    { label: "Cheque", value: "cheque" },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Form.Item name="notes" label="Notes">
-            <Input.TextArea rows={3} placeholder="Payment notes" />
+            <Input.TextArea rows={2} placeholder="Payment notes" style={{ resize: "none" }} />
           </Form.Item>
-
-          <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-            <Button onClick={() => setPaymentDrawerOpen(false)} size="large">
-              Cancel
-            </Button>
-            <Button type="primary" htmlType="submit" loading={loading} size="large">
-              Save Payment
-            </Button>
-          </Space>
         </Form>
-      </Drawer>
+      </Modal>
     </div>
   );
 }

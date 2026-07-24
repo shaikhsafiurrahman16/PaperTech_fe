@@ -167,16 +167,32 @@ function PoliciesPage() {
         title={editingPolicy ? "Edit Policy" : "Create Policy"}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
-        footer={null}
         centered
         width={720}
+        styles={{
+          footer: {
+            padding: "16px 24px",
+            borderTop: "1px solid #f0f0f0",
+            display: "flex",
+            justifyContent: "right",
+            gap: "12px",
+          },
+          body: {
+            padding: "16px 24px 8px",
+          },
+        }}
+        footer={
+          <>
+            <Button onClick={() => setModalOpen(false)} size="large">Cancel</Button>
+            <Button type="primary" htmlType="submit" loading={saving} size="large" onClick={() => form.submit()}>
+              {editingPolicy ? "Update Policy" : "Create Policy"}
+            </Button>
+          </>
+        }
       >
-        <Form form={form} layout="vertical" requiredMark={false} onFinish={handleSubmit}>
+        <Form form={form} layout="vertical" requiredMark={false} onFinish={handleSubmit} style={{ marginTop: "8px" }}>
           <Form.Item name="name" label="Policy Name" rules={[{ required: true, message: "Policy name is required" }]}>
             <Input placeholder="e.g. Sales Staff" />
-          </Form.Item>
-          <Form.Item name="description" label="Description">
-            <Input.TextArea rows={2} placeholder="Short description of this policy" />
           </Form.Item>
           <Form.Item
             name="allowed_modules"
@@ -185,9 +201,9 @@ function PoliciesPage() {
           >
             <PolicySelect modules={modules} placeholder="Select permissions for this policy" />
           </Form.Item>
-          <Button type="primary" htmlType="submit" loading={saving} block size="large">
-            Save Policy
-          </Button>
+          <Form.Item name="description" label="Description">
+            <Input.TextArea rows={2} placeholder="Short description of this policy" style={{ resize: "none" }} />
+          </Form.Item>
         </Form>
       </Modal>
     </Space>

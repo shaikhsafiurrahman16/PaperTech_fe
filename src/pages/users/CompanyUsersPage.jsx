@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { App, Button, Card, Form, Input, Modal, Popconfirm, Space, Table, Tag } from "antd";
+import { App, Button, Card, Form, Input, Modal, Popconfirm, Space, Table, Tag, Row, Col } from "antd";
 import { EditOutlined, PlusOutlined, DeleteOutlined } from "@ant-design/icons";
 import api from "../../services/apiClient";
 import PageHeader from "../../components/layout/PageHeader";
@@ -157,46 +157,76 @@ function CompanyUsersPage() {
         title={editingUser ? "Edit User" : "Create User"}
         open={modalOpen}
         onCancel={() => setModalOpen(false)}
-        footer={null}
         centered
+        width={520}
+        styles={{
+          footer: {
+            padding: "16px 24px",
+            borderTop: "1px solid #f0f0f0",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+          },
+          body: {
+            padding: "16px 24px 8px",
+          },
+        }}
+        footer={
+          <>
+            <Button onClick={() => setModalOpen(false)} size="large">Cancel</Button>
+            <Button type="primary" htmlType="submit" loading={saving} size="large" onClick={() => form.submit()}>
+              {editingUser ? "Update User" : "Create User"}
+            </Button>
+          </>
+        }
       >
-        <Form form={form} layout="vertical" requiredMark={false} onFinish={handleSubmit} autoComplete="off">
-          <Form.Item name="full_name" label="Full Name" rules={[{ required: true, message: "Full name is required" }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item name="email" label="Email" rules={[{ type: "email", message: "Enter a valid email" }]}>
-            <Input />
-          </Form.Item>
-          <Form.Item
-            name="cnic"
-            label="CNIC"
-            rules={[{ pattern: /^\d{1,13}$/, message: "CNIC must be digits only and maximum 13 digits" }]}
-          >
-            <Input />
-          </Form.Item>
+        <Form form={form} layout="vertical" requiredMark={false} onFinish={handleSubmit} autoComplete="off" style={{ marginTop: "8px" }}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="full_name" label="Full Name" rules={[{ required: true, message: "Full name is required" }]}>
+                <Input placeholder="Enter full name" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="email" label="Email" rules={[{ type: "email", message: "Enter a valid email" }]}>
+                <Input placeholder="Enter email address" />
+              </Form.Item>
+            </Col>
+          </Row>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="cnic" label="CNIC" rules={[{ pattern: /^\d{1,13}$/, message: "CNIC must be digits only (max 13)" }]}>
+                <Input placeholder="e.g. 3520212345678" maxLength={13} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item name="policy_id" label="Policy" rules={[{ required: true, message: "Select a policy" }]}>
+                <PolicyAssignSelect policies={userPolicies} loading={policiesLoading} placeholder="Select user policy" />
+              </Form.Item>
+            </Col>
+          </Row>
+
           <Form.Item name="address" label="Address">
-            <Input.TextArea rows={3} />
+            <Input.TextArea rows={2} placeholder="Enter address" style={{ resize: "none" }} />
           </Form.Item>
-          <Form.Item name="username" label="Username" rules={[{ required: true, message: "Username is required" }]}>
-            <Input autoComplete="new-password" />
-          </Form.Item>
-          <Form.Item
-            name="password"
-            label={editingUser ? "New Password" : "Password"}
-            rules={editingUser ? [] : [{ required: true, message: "Password is required" }, { min: 6, message: "Min 6 chars" }]}
-          >
-            <Input.Password autoComplete="new-password" />
-          </Form.Item>
-          <Form.Item
-            name="policy_id"
-            label="Policy"
-            rules={[{ required: true, message: "Select a policy" }]}
-          >
-            <PolicyAssignSelect policies={userPolicies} loading={policiesLoading} placeholder="Select user policy" />
-          </Form.Item>
-          <Button type="primary" htmlType="submit" loading={saving} block size="large">
-            Save User
-          </Button>
+
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item name="username" label="Username" rules={[{ required: true, message: "Username is required" }]}>
+                <Input placeholder="Enter username" autoComplete="new-password" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="password"
+                label={editingUser ? "New Password" : "Password"}
+                rules={editingUser ? [] : [{ required: true, message: "Password is required" }, { min: 6, message: "Min 6 chars" }]}
+              >
+                <Input.Password placeholder={editingUser ? "Leave blank to keep current" : "Enter password"} autoComplete="new-password" />
+              </Form.Item>
+            </Col>
+          </Row>
         </Form>
       </Modal>
     </Space>

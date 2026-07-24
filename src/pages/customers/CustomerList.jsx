@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import {
   Table,
   Button,
-  Drawer,
+  Modal,
   Form,
   Input,
   InputNumber,
@@ -292,10 +292,10 @@ function CustomerList() {
   const normalizedSearch = searchTerm.trim().toLowerCase();
   const filteredCustomers = normalizedSearch
     ? customers.filter((c) =>
-        [c.shop_name, c.full_name, c.phone, c.username]
-          .filter(Boolean)
-          .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
-      )
+      [c.shop_name, c.full_name, c.phone, c.username]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(normalizedSearch)),
+    )
     : customers;
 
   return (
@@ -407,18 +407,51 @@ function CustomerList() {
         </Spin>
       </Card>
 
-      <Drawer
+      <Modal
         title={editingCustomer ? "Edit Customer" : "Add New Customer"}
         open={drawerOpen}
-        width={450}
-        onClose={() => {
+        onCancel={() => {
           setDrawerOpen(false);
           setEditingCustomer(null);
           form.resetFields();
         }}
-        bodyStyle={{ paddingBottom: 80 }}
+        centered
+        width={560}
+        styles={{
+          footer: {
+            padding: "16px 24px",
+            borderTop: "1px solid #f0f0f0",
+            display: "flex",
+            justifyContent: "right",
+            gap: "12px",
+          },
+          body: {
+            padding: "16px 24px 8px",
+          },
+        }}
+        footer={
+          <>
+            <Button
+              onClick={() => {
+                setDrawerOpen(false);
+                form.resetFields();
+              }}
+              size="large"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              loading={loading}
+              size="large"
+              onClick={() => form.submit()}
+            >
+              {editingCustomer ? "Update Customer" : "Save Customer"}
+            </Button>
+          </>
+        }
       >
-        <Form layout="vertical" form={form} onFinish={onFinish} autoComplete="off">
+        <Form layout="vertical" form={form} onFinish={onFinish} autoComplete="off" style={{ marginTop: "8px" }}>
           <Form.Item
             name="full_name"
             label="Owner Full Name"
@@ -441,111 +474,86 @@ function CustomerList() {
             <Input placeholder="e.g.: Ahmad Paper House" size="large" />
           </Form.Item>
 
-          <Form.Item
-            name="phone"
-            label="Phone Number"
-            rules={[
-              { required: true, message: "Phone is required" },
-              {
-                pattern: /^\d{1,11}$/,
-                message: "Phone number must be digits only and maximum 11 digits",
-              },
-            ]}
-          >
-            <Input maxLength={11} placeholder="e.g.: 03001234567" size="large" />
-          </Form.Item>
+          <Row gutter={16}>
+            <Col span={8}>
+              <Form.Item
+                name="phone"
+                label="Phone Number"
+                rules={[
+                  { required: true, message: "Phone is required" },
+                  { pattern: /^\d{1,11}$/, message: "Digits only, max 11" },
+                ]}
+              >
+                <Input maxLength={11} placeholder="03001234567" size="large" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                name="cnic"
+                label="CNIC"
+                rules={[
+                  { pattern: /^\d{1,13}$/, message: "Digits only, max 13" },
+                ]}
+              >
+                <Input maxLength={13} placeholder="1234512345671" size="large" />
+              </Form.Item>
+            </Col>
+            <Col span={8}>
+              <Form.Item
+                name="credit_limit"
+                label="Credit Limit"
+                rules={[{ type: "number", min: 0, message: "Enter a valid number" }]}
+              >
+                <InputNumber
+                  placeholder="e.g.: 50000"
+                  style={{ width: "100%" }}
+                  size="large"
+                  prefix="Rs. "
+                />
+              </Form.Item>
+            </Col>
+          </Row>
 
           <Form.Item name="address" label="Address">
-            <Input.TextArea rows={2} placeholder="Enter full shop address" />
-          </Form.Item>
-
-          <Form.Item
-            name="cnic"
-            label="CNIC"
-            rules={[
-              {
-                pattern: /^\d{1,13}$/,
-                message: "CNIC must be digits only and maximum 13 digits",
-              },
-            ]}
-          >
-            <Input maxLength={13} placeholder="e.g.: 1234512345671" />
-          </Form.Item>
-
-          <Form.Item
-            name="credit_limit"
-            label="Credit Limit"
-            rules={[
-              { type: "number", min: 0, message: "Enter a valid number" },
-            ]}
-          >
-            <InputNumber
-              placeholder="e.g.: 50000"
-              style={{ width: "100%" }}
-              size="large"
-              prefix="Rs. "
-            />
+            <Input.TextArea rows={2} placeholder="Enter full shop address" style={{ resize: "none" }} />
           </Form.Item>
 
           {!editingCustomer && (
-            <>
-              <Form.Item
-                name="username"
-                label="Username (for Login)"
-                rules={[
-                  { required: true, message: "Username is required" },
-                  {
-                    pattern: /^\S+$/,
-                    message: "Username cannot contain spaces",
-                  },
-                ]}
-              >
-                <Input autoComplete="new-password" size="large" />
-              </Form.Item>
-
-              <Form.Item
-                name="password"
-                label="Password"
-                rules={[
-                  { required: true, message: "Password is required" },
-                  { min: 6, message: "At least 6 characters" },
-                ]}
-              >
-                <Input.Password autoComplete="new-password" size="large" />
-              </Form.Item>
-            </>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="username"
+                  label="Username (for Login)"
+                  rules={[
+                    { required: true, message: "Username is required" },
+                    { pattern: /^\S+$/, message: "Username cannot contain spaces" },
+                  ]}
+                >
+                  <Input placeholder="Enter username" autoComplete="new-password" size="large" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="password"
+                  label="Password"
+                  rules={[
+                    { required: true, message: "Password is required" },
+                    { min: 6, message: "At least 6 characters" },
+                  ]}
+                >
+                  <Input.Password placeholder="Enter password" autoComplete="new-password" size="large" />
+                </Form.Item>
+              </Col>
+            </Row>
           )}
+
           {editingCustomer && (
             <Form.Item label="Username">
               <Input value={editingCustomer.username} disabled size="large" />
             </Form.Item>
           )}
-
-          <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-            <Tooltip title="Close without saving">
-              <Button
-                onClick={() => {
-                  setDrawerOpen(false);
-                  form.resetFields();
-                }}
-                size="large"
-              >
-                Cancel
-              </Button>
-            </Tooltip>
-            <Tooltip title="Save customer details">
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                size="large"
-              >
-                Save
-              </Button>
-            </Tooltip>
-          </Space>
         </Form>
-      </Drawer>
+      </Modal>
     </div>
   );
 }

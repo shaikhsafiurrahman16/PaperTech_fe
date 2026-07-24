@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Table, Button, Drawer, Form, Select, InputNumber, Input, message, Typography, Card, Row, Col, Statistic, Space, Spin, Popconfirm, DatePicker, Tooltip } from 'antd';
+import { Table, Button, Modal, Form, Select, InputNumber, Input, message, Typography, Card, Row, Col, Statistic, Space, Spin, Popconfirm, DatePicker, Tooltip } from 'antd';
 import { PlusOutlined, FileExcelOutlined, FilePdfOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -361,102 +361,113 @@ function PaymentList() {
         </Spin>
       </Card>
 
-      <Drawer
-        title={editingPayment ? 'Edit Payment' : 'Record New Payment'}
+      <Modal
+        title={editingPayment ? "Edit Payment" : "Record New Payment"}
         open={drawerOpen}
-        width={450}
-        onClose={() => {
+        onCancel={() => {
           setDrawerOpen(false);
           setEditingPayment(null);
           form.resetFields();
         }}
-        bodyStyle={{ paddingBottom: 80 }}
+        centered
+        width={560}
+        styles={{
+          footer: {
+            padding: "16px 24px",
+            borderTop: "1px solid #f0f0f0",
+            display: "flex",
+            justifyContent: "right",
+            gap: "12px",
+          },
+          body: {
+            padding: "16px 24px 8px",
+          },
+        }}
+        footer={
+          <>
+            <Button
+              onClick={() => {
+                setDrawerOpen(false);
+                setEditingPayment(null);
+                form.resetFields();
+              }}
+              size="large"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              loading={loading}
+              size="large"
+              onClick={() => form.submit()}
+            >
+              {editingPayment ? "Update Payment" : "Record Payment"}
+            </Button>
+          </>
+        }
       >
-        <Form
-          layout="vertical"
-          form={form}
-          onFinish={onFinish}
-        >
-          <Form.Item
-            name="customer_id"
-            label="Select Customer"
-            rules={[{ required: true, message: 'Please select a customer' }]}
-          >
-            <Select
-              placeholder="Search by customer name"
-              options={customers.map(c => ({
-                label: `${c.shop_name} (${c.full_name})`,
-                value: c.id
-              }))}
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="amount"
-            label="Amount"
-            rules={[{ required: true, type: 'number', min: 1, message: 'Please enter amount' }]}
-          >
-            <InputNumber
-              style={{ width: '100%' }}
-              size="large"
-              prefix="Rs. "
-              placeholder="Example: 5000"
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="payment_method"
-            label="Payment Method"
-            initialValue="cash"
-            rules={[{ required: true }]}
-          >
-            <Select
-              options={[
-                { label: 'Cash', value: 'cash' },
-                { label: 'Check', value: 'check' },
-                { label: 'Bank Transfer', value: 'bank_transfer' },
-                { label: 'Online', value: 'online' },
-              ]}
-              size="large"
-            />
-          </Form.Item>
-
-          <Form.Item
-            name="notes"
-            label="Notes"
-          >
-            <Input.TextArea
-              rows={3}
-              placeholder="Add any notes or comments"
-            />
-          </Form.Item>
-
-          <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-            <Tooltip title="Close without saving">
-              <Button
-                onClick={() => {
-                  setDrawerOpen(false);
-                  setEditingPayment(null);
-                  form.resetFields();
-                }}
-                size="large"
+        <Form layout="vertical" form={form} onFinish={onFinish} autoComplete="off" style={{ marginTop: "8px" }}>
+          <Row gutter={16}>
+            <Col span={12}>
+              <Form.Item
+                name="amount"
+                label="Amount"
+                rules={[{ required: true, type: "number", min: 1, message: "Please enter amount" }]}
               >
-                Cancel
-              </Button>
-            </Tooltip>
-            <Tooltip title={editingPayment ? 'Save payment changes' : 'Save this payment'}>
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                size="large"
+                <InputNumber
+                  style={{ width: "100%" }}
+                  size="large"
+                  min={1}
+                  prefix="Rs. "
+                  placeholder="e.g.: 5000"
+                />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                name="customer_id"
+                label="Select Customer"
+                rules={[{ required: true, message: "Please select a customer" }]}
               >
-                {editingPayment ? 'Update Payment' : 'Record Payment'}
-              </Button>
-            </Tooltip>
-          </Space>
+                <Select
+                  showSearch
+                  size="large"
+                  placeholder="Search by customer name"
+                  optionFilterProp="label"
+                  options={customers.map((c) => ({
+                    label: `${c.shop_name} (${c.full_name})`,
+                    value: c.id,
+                  }))}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Row gutter={16}>
+            <Col span={24}>
+              <Form.Item
+                name="payment_method"
+                label="Payment Method"
+                initialValue="cash"
+                rules={[{ required: true, message: "Select payment method" }]}
+              >
+                <Select
+                  size="large"
+                  placeholder="Select method"
+                  options={[
+                    { label: "Cash", value: "cash" },
+                    { label: "Check", value: "check" },
+                    { label: "Bank Transfer", value: "bank_transfer" },
+                    { label: "Online", value: "online" },
+                  ]}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item name="notes" label="Notes">
+            <Input.TextArea rows={2} placeholder="Add any notes or comments" style={{ resize: "none" }} />
+          </Form.Item>
         </Form>
-      </Drawer>
+      </Modal>
     </div>
   );
 }

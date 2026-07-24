@@ -15,7 +15,6 @@ import {
   Statistic,
   Spin,
   Tooltip,
-  Drawer,
   Modal,
   Select,
 } from "antd";
@@ -426,18 +425,51 @@ function ProductList() {
         </Spin>
       </Card>
 
-      <Drawer
-        title={editingProduct ? 'Edit Product' : 'Add New Product'}
+      <Modal
+        title={editingProduct ? "Edit Product" : "Add New Product"}
         open={modalOpen}
-        onClose={() => {
+        onCancel={() => {
           setModalOpen(false);
           setEditingProduct(null);
           form.resetFields();
         }}
+        centered
         width={700}
-        bodyStyle={{ paddingBottom: 80 }}
+        styles={{
+          footer: {
+            padding: "16px 24px",
+            borderTop: "1px solid #f0f0f0",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+          },
+          body: {
+            padding: "16px 24px 8px",
+          },
+        }}
+        footer={
+          <>
+            <Button
+              onClick={() => {
+                setModalOpen(false);
+                form.resetFields();
+              }}
+              size="large"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              loading={loading}
+              size="large"
+              onClick={() => form.submit()}
+            >
+              {editingProduct ? "Update Product" : "Save Product"}
+            </Button>
+          </>
+        }
       >
-        <Form layout="vertical" form={form} onFinish={onFinish}>
+        <Form layout="vertical" form={form} onFinish={onFinish} autoComplete="off" style={{ marginTop: "8px" }}>
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
@@ -538,16 +570,13 @@ function ProductList() {
                 />
               </Form.Item>
             </Col>
-            {industryConfig.showPaperFields ? <Col span={12}>
-              <Form.Item name="sheets_per_pack" label="Sheets Per Pack">
-                <InputNumber
-                  min={0}
-                  disabled
-                  size="large"
-                  style={{ width: "100%" }}
-                />
-              </Form.Item>
-            </Col> : null}
+            {industryConfig.showPaperFields ? (
+              <Col span={12}>
+                <Form.Item name="sheets_per_pack" label="Sheets Per Pack">
+                  <InputNumber min={0} disabled size="large" style={{ width: "100%" }} />
+                </Form.Item>
+              </Col>
+            ) : null}
           </Row>
 
           <Row gutter={16}>
@@ -557,12 +586,7 @@ function ProductList() {
                 label="Cost Price"
                 rules={[{ required: true, message: "Cost price is required" }]}
               >
-                <InputNumber
-                  min={0}
-                  size="large"
-                  style={{ width: "100%" }}
-                  prefix="Rs. "
-                />
+                <InputNumber min={0} size="large" style={{ width: "100%" }} prefix="Rs. " />
               </Form.Item>
             </Col>
             <Col span={12}>
@@ -571,12 +595,7 @@ function ProductList() {
                 label="Sale Price"
                 rules={[{ required: true, message: "Sale price is required" }]}
               >
-                <InputNumber
-                  min={0}
-                  size="large"
-                  style={{ width: "100%" }}
-                  prefix="Rs. "
-                />
+                <InputNumber min={0} size="large" style={{ width: "100%" }} prefix="Rs. " />
               </Form.Item>
             </Col>
           </Row>
@@ -599,34 +618,10 @@ function ProductList() {
           </Row>
 
           <Form.Item name="description" label="Description">
-            <Input.TextArea rows={3} placeholder="Product description" />
+            <Input.TextArea rows={2} placeholder="Product description" style={{ resize: "none" }} />
           </Form.Item>
-
-          <Space style={{ width: "100%", justifyContent: "flex-end" }}>
-            <Tooltip title="Close without saving">
-              <Button
-                onClick={() => {
-                  setModalOpen(false);
-                  form.resetFields();
-                }}
-                size="large"
-              >
-                Cancel
-              </Button>
-            </Tooltip>
-            <Tooltip title="Save product details">
-              <Button
-                type="primary"
-                htmlType="submit"
-                loading={loading}
-                size="large"
-              >
-                Save
-              </Button>
-            </Tooltip>
-          </Space>
         </Form>
-      </Drawer>
+      </Modal>
 
     </div>
   );

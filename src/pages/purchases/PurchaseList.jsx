@@ -4,7 +4,7 @@ import {
   Card,
   Col,
   DatePicker,
-  Drawer,
+  Modal,
   Form,
   Input,
   InputNumber,
@@ -323,18 +323,51 @@ function PurchaseList() {
         </Spin>
       </Card>
 
-      <Drawer
+      <Modal
         title={editingPurchase ? `Update Purchase ${editingPurchase.purchase_number}` : "Create Purchase"}
         open={drawerOpen}
-        width={760}
-        onClose={() => {
+        onCancel={() => {
           setDrawerOpen(false);
           setEditingPurchase(null);
           form.resetFields();
         }}
-        bodyStyle={{ paddingBottom: 80 }}
+        centered
+        width={760}
+        styles={{
+          footer: {
+            padding: "16px 24px",
+            borderTop: "1px solid #f0f0f0",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+          },
+          body: {
+            padding: "16px 24px 8px",
+          },
+        }}
+        footer={
+          <>
+            <Button
+              onClick={() => {
+                setDrawerOpen(false);
+                setEditingPurchase(null);
+              }}
+              size="large"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              loading={saving}
+              size="large"
+              onClick={() => form.submit()}
+            >
+              {editingPurchase ? "Update Purchase" : "Save Purchase"}
+            </Button>
+          </>
+        }
       >
-        <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form form={form} layout="vertical" onFinish={onFinish} autoComplete="off" style={{ marginTop: "8px" }}>
           <Form.Item
             name="vendor_id"
             label="Vendor"
@@ -345,6 +378,7 @@ function PurchaseList() {
               placeholder="Select vendor"
               disabled={!!editingPurchase}
               optionFilterProp="label"
+              size="large"
               options={vendors.map((vendor) => ({
                 label: `${vendor.company_name} (${vendor.full_name})`,
                 value: vendor.id,
@@ -358,6 +392,8 @@ function PurchaseList() {
             rules={[{ required: true, message: "Select purchase type" }]}
           >
             <Select
+              size="large"
+              placeholder="Select type"
               options={[
                 { label: "Cash", value: "cash" },
                 { label: "Credit", value: "credit" },
@@ -480,11 +516,15 @@ function PurchaseList() {
                     </Row>
                   </Card>
                 ))}
-                <Form.Item>
-                  <Button disabled={!!editingPurchase} type="dashed" block icon={<PlusOutlined />} onClick={() => add({ product_id: null, quantity: 1, unit_price: 0, quantity_unit: "pack" })}>
-                    Add Item
-                  </Button>
-                </Form.Item>
+                <Row gutter={16}>
+                  <Col span={24}>
+                    <Form.Item>
+                      <Button disabled={!!editingPurchase} type="dashed" block icon={<PlusOutlined />} onClick={() => add({ product_id: null, quantity: 1, unit_price: 0, quantity_unit: "pack" })}>
+                        Add Item
+                      </Button>
+                    </Form.Item>
+                  </Col>
+                </Row>
               </>
             )}
           </Form.List>
@@ -492,24 +532,17 @@ function PurchaseList() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="discount" label="Discount" initialValue={0}>
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} style={{ width: "100%" }} size="large" placeholder="e.g.: 500" />
               </Form.Item>
             </Col>
             <Col span={12}>
               <Form.Item name="payment_paid" label="Payment Paid" initialValue={0}>
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} style={{ width: "100%" }} size="large" placeholder="e.g.: 10000" />
               </Form.Item>
             </Col>
           </Row>
-
-          <Space>
-            <Button type="primary" htmlType="submit" loading={saving}>
-              {editingPurchase ? "Update Purchase" : "Save Purchase"}
-            </Button>
-            <Button onClick={() => { setDrawerOpen(false); setEditingPurchase(null); }}>Cancel</Button>
-          </Space>
         </Form>
-      </Drawer>
+      </Modal>
     </div>
   );
 }

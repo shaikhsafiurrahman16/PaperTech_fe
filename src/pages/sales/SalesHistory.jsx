@@ -4,7 +4,7 @@ import { useSelector } from "react-redux";
 import {
   Table,
   Button,
-  Drawer,
+  Modal,
   Form,
   Select,
   Input,
@@ -595,20 +595,55 @@ function SalesHistory() {
         </Spin>
       </Card>
 
-      <Drawer
+      <Modal
         title={editingSale ? "Edit Sale" : "Create Sale"}
         open={drawerOpen}
-        width={720}
-        onClose={() => {
+        onCancel={() => {
           setDrawerOpen(false);
+          setEditingSale(null);
           form.resetFields();
         }}
-        bodyStyle={{ paddingBottom: 80 }}
+        centered
+        width={720}
+        styles={{
+          footer: {
+            padding: "16px 24px",
+            borderTop: "1px solid #f0f0f0",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: "12px",
+          },
+          body: {
+            padding: "16px 24px 8px",
+          },
+        }}
+        footer={
+          <>
+            <Button
+              onClick={() => {
+                setDrawerOpen(false);
+                setEditingSale(null);
+              }}
+              size="large"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="primary"
+              loading={loading}
+              size="large"
+              onClick={() => form.submit()}
+            >
+              {editingSale ? "Update Sale" : "Save Sale"}
+            </Button>
+          </>
+        }
       >
-        <Form form={form} layout="vertical" onFinish={onFinish}>
+        <Form form={form} layout="vertical" onFinish={onFinish} autoComplete="off" style={{ marginTop: "8px" }}>
           <Form.Item name="customer_id" label="Select Customer (optional)">
             <Select
               allowClear
+              size="large"
               placeholder="Select or leave blank for walk-in"
               options={customers.map((c) => ({
                 label: `${c.shop_name} (${c.full_name})`,
@@ -624,6 +659,7 @@ function SalesHistory() {
             rules={[{ required: true, message: "Sale type is required" }]}
           >
             <Select
+              size="large"
               options={[
                 { label: "Cash", value: "cash" },
                 {
@@ -664,6 +700,7 @@ function SalesHistory() {
               </Col>
             </Row>
           </Card>
+
           <Form.List
             name="items"
             initialValue={[{ product_id: null, quantity: 1, unit_price: 0, quantity_unit: "pack" }]}
@@ -679,9 +716,7 @@ function SalesHistory() {
                           name={[field.name, "product_id"]}
                           fieldKey={[field.fieldKey, "product_id"]}
                           label="Product"
-                          rules={[
-                            { required: true, message: "Select a product" },
-                          ]}
+                          rules={[{ required: true, message: "Select a product" }]}
                           style={{ marginBottom: 0 }}
                         >
                           <Select
@@ -691,9 +726,7 @@ function SalesHistory() {
                               value: p.id,
                             }))}
                             onChange={(value) => {
-                              const selected = products.find(
-                                (p) => p.id === value,
-                              );
+                              const selected = products.find((p) => p.id === value);
                               if (selected) {
                                 form.setFieldValue(
                                   ["items", field.name, "unit_price"],
@@ -718,12 +751,7 @@ function SalesHistory() {
                           fieldKey={[field.fieldKey, "quantity"]}
                           label="Quantity"
                           rules={[
-                            {
-                              required: true,
-                              type: "number",
-                              min: 1,
-                              message: "Enter quantity",
-                            },
+                            { required: true, type: "number", min: 1, message: "Enter quantity" },
                           ]}
                           style={{ marginBottom: 0 }}
                         >
@@ -752,9 +780,7 @@ function SalesHistory() {
                                 "product_id",
                               ]);
                               const selected = products.find((p) => p.id === productId);
-                              if (!selected) {
-                                return;
-                              }
+                              if (!selected) return;
                               if (value === "sheet") {
                                 form.setFieldValue(
                                   ["items", field.name, "unit_price"],
@@ -777,12 +803,7 @@ function SalesHistory() {
                           fieldKey={[field.fieldKey, "unit_price"]}
                           label="Price"
                           rules={[
-                            {
-                              required: true,
-                              type: "number",
-                              min: 0,
-                              message: "Enter unit price",
-                            },
+                            { required: true, type: "number", min: 0, message: "Enter unit price" },
                           ]}
                           style={{ marginBottom: 0 }}
                         >
@@ -790,31 +811,31 @@ function SalesHistory() {
                         </Form.Item>
                       </Col>
                       <Col span={2}>
-                        <Tooltip title="Remove this item">
-                          <Button
-                            type="text"
-                            danger
-                            icon={<MinusCircleOutlined />}
-                            onClick={() => remove(field.name)}
-                            style={{ marginTop: 8 }}
-                          />
-                        </Tooltip>
+                        <Button
+                          type="text"
+                          danger
+                          icon={<MinusCircleOutlined />}
+                          onClick={() => remove(field.name)}
+                          style={{ marginTop: 8 }}
+                        />
                       </Col>
                     </Row>
                   </Card>
                 ))}
-                <Form.Item>
-                  <Tooltip title="Add another product line">
-                    <Button
-                      type="dashed"
-                      block
-                      icon={<PlusOutlined />}
-                      onClick={() => add({ product_id: null, quantity: 1, unit_price: 0, quantity_unit: "pack" })}
-                    >
-                      Add Item
-                    </Button>
-                  </Tooltip>
-                </Form.Item>
+                <Row gutter={16}>
+                  <Col span={24}>
+                    <Form.Item>
+                      <Button
+                        type="dashed"
+                        block
+                        icon={<PlusOutlined />}
+                        onClick={() => add({ product_id: null, quantity: 1, unit_price: 0, quantity_unit: "pack" })}
+                      >
+                        Add Item
+                      </Button>
+                    </Form.Item>
+                  </Col>
+                </Row>
               </>
             )}
           </Form.List>
@@ -822,47 +843,17 @@ function SalesHistory() {
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item name="discount" label="Discount" initialValue={0}>
-                <InputNumber min={0} style={{ width: "100%" }} />
+                <InputNumber min={0} style={{ width: "100%" }} size="large" placeholder="e.g.: 500" />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item
-                name="payment_received"
-                label="Payment Received"
-                initialValue={0}
-              >
-                <InputNumber min={0} style={{ width: "100%" }} />
+              <Form.Item name="payment_received" label="Payment Received" initialValue={0}>
+                <InputNumber min={0} style={{ width: "100%" }} size="large" placeholder="e.g.: 5000" />
               </Form.Item>
             </Col>
           </Row>
-
-          <Form.Item>
-            <Space>
-              <Tooltip title="Save sale and invoice">
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  loading={loading}
-                  size="large"
-                >
-                  Save Sale
-                </Button>
-              </Tooltip>
-              <Tooltip title="Close without saving">
-                <Button
-                  onClick={() => {
-                    setDrawerOpen(false);
-                    form.resetFields();
-                  }}
-                  size="large"
-                >
-                  Cancel
-                </Button>
-              </Tooltip>
-            </Space>
-          </Form.Item>
         </Form>
-      </Drawer>
+      </Modal>
     </div>
   );
 }
