@@ -109,12 +109,12 @@ function Login() {
       text: "Invoices, payments, and ledgers in one place.",
     },
     {
-      icon: <DatabaseOutlined />, 
+      icon: <DatabaseOutlined />,
       title: "Smart Inventory",
       text: "Real-time stock tracking and automated reorder alerts.",
     },
     {
-      icon: <LockOutlined />, 
+      icon: <LockOutlined />,
       title: "Secure Data",
       text: "Enterprise-grade security and automated daily backups.",
     },
