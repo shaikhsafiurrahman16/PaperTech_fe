@@ -8,6 +8,7 @@ export default ({ mode }) => {
   const env = loadEnv(mode, projectRoot, '');
 
   return defineConfig({
+    base: '/', // <-- Ye line zaroori hai production deploys ke liye
     plugins: [react()],
     server: {
       port: parseInt(env.VITE_PORT) || parseInt(env.PORT) || 3000,
