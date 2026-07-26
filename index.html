@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -20,4 +20,35 @@
     <div id="root"></div>
     <script type="module" src="src/main.jsx"></script>
   </body>
+</html> -->
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TradeStack</title>
+  <script>
+    const storedTheme = localStorage.getItem('papertech_darkMode');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const isDark = storedTheme ? storedTheme === 'true' : prefersDark;
+    document.documentElement.dataset.theme = isDark ? 'dark' : 'light';
+    document.body?.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', isDark);
+    if (isDark) {
+      document.body?.classList.add('dark');
+    }
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <!-- / (slash) add kardiya hai src ke aage -->
+  <script type="module" src="/src/main.jsx"></script>
+</body>
+
 </html>
