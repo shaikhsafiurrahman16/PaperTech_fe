@@ -3,7 +3,10 @@ import store from '../stores';
 import { logout } from '../stores/authSlice';
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  // baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  // baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
+  baseURL: 'http://tradestackbe.netlify.app/api',
+
   headers: {
     'Content-Type': 'application/json',
   },
