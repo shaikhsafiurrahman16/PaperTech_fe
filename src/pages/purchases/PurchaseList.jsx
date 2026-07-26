@@ -19,10 +19,11 @@ import {
   Typography,
   message,
 } from "antd";
-import { EditOutlined, MinusCircleOutlined, PlusOutlined } from "@ant-design/icons";
+import { EditOutlined, MinusCircleOutlined, PlusOutlined, DownloadOutlined } from "@ant-design/icons";
 import { useSelector } from "react-redux";
 import api from "../../services/apiClient";
 import usePermissions from "../../hooks/usePermissions";
+import { downloadInvoicePDF } from "../../services/pdfDownloadService";
 
 const formatMoney = (value) => `Rs. ${Number(value ?? 0).toFixed(2)}`;
 const getSheetsPerPack = (product) => Number(product?.sheets_per_pack || 1) || 1;
@@ -278,43 +279,61 @@ function PurchaseList() {
               ...(isAdmin && canUpdate ? [{
                 title: "Action",
                 key: "action",
-                width: 90,
+                width: 120,
                 fixed: "right",
                 render: (_, record) => (
-                  <Tooltip title="Update purchase">
-                    <Button
-                      type="text"
-                      icon={<EditOutlined />}
-                      size="small"
-                      onClick={async () => {
-                        try {
-                          setSaving(true);
-                          const response = await api.get(`/purchases/${record.id}`);
-                          const purchase = response.data.data?.purchase;
-                          if (!purchase) return;
-                          setEditingPurchase(purchase);
-                          form.resetFields();
-                          form.setFieldsValue({
-                            vendor_id: purchase.vendor_id,
-                            purchase_type: purchase.purchase_type,
-                            discount: Number(purchase.discount || 0),
-                            payment_paid: Number(purchase.payment_paid || 0),
-                            items: (response.data.data?.items || []).map((item) => ({
-                              product_id: item.product_id,
-                              quantity: item.quantity,
-                              quantity_unit: "sheet",
-                              unit_price: Number(item.unit_price || 0),
-                            })),
-                          });
-                          setDrawerOpen(true);
-                        } catch (error) {
-                          message.error(error.response?.data?.message || "Failed to load purchase details");
-                        } finally {
-                          setSaving(false);
-                        }
-                      }}
-                    />
-                  </Tooltip>
+                  <Space size="small">
+                    <Tooltip title="Download PDF">
+                      <Button
+                        type="text"
+                        icon={<DownloadOutlined />}
+                        size="small"
+                        onClick={async () => {
+                          try {
+                            const invoiceNum = record.purchase_number || `PUR-${record.id}`;
+                            await downloadInvoicePDF('purchase', record.id, `Purchase_${invoiceNum}.pdf`);
+                            message.success("PDF downloaded successfully!");
+                          } catch (error) {
+                            message.error(error.response?.data?.message || "Failed to download PDF");
+                          }
+                        }}
+                      />
+                    </Tooltip>
+                    <Tooltip title="Update purchase">
+                      <Button
+                        type="text"
+                        icon={<EditOutlined />}
+                        size="small"
+                        onClick={async () => {
+                          try {
+                            setSaving(true);
+                            const response = await api.get(`/purchases/${record.id}`);
+                            const purchase = response.data.data?.purchase;
+                            if (!purchase) return;
+                            setEditingPurchase(purchase);
+                            form.resetFields();
+                            form.setFieldsValue({
+                              vendor_id: purchase.vendor_id,
+                              purchase_type: purchase.purchase_type,
+                              discount: Number(purchase.discount || 0),
+                              payment_paid: Number(purchase.payment_paid || 0),
+                              items: (response.data.data?.items || []).map((item) => ({
+                                product_id: item.product_id,
+                                quantity: item.quantity,
+                                quantity_unit: "sheet",
+                                unit_price: Number(item.unit_price || 0),
+                              })),
+                            });
+                            setDrawerOpen(true);
+                          } catch (error) {
+                            message.error(error.response?.data?.message || "Failed to load purchase details");
+                          } finally {
+                            setSaving(false);
+                          }
+                        }}
+                      />
+                    </Tooltip>
+                  </Space>
                 ),
               }] : []),
             ]}

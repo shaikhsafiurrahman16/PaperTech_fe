@@ -30,10 +30,8 @@ import {
   EditOutlined,
   DeleteOutlined,
 } from "@ant-design/icons";
+import { generateStyledPDF } from "../../lib/pdfTemplateEngine";
 import api from "../../services/apiClient";
-import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 
 const formatMoney = (value) => `Rs. ${Number(value ?? 0).toFixed(2)}`;
 const getSheetsPerPack = (product) => Number(product?.sheets_per_pack || 1) || 1;
@@ -240,59 +238,55 @@ function SalesHistory() {
     message.success("Exported to Excel successfully");
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (sales.length === 0) {
       message.warning("No data available to export");
       return;
     }
 
-    const doc = new jsPDF();
+    const tableHeaders = [
+      "Invoice",
+      "Customer",
+      "Grand Total",
+      "Type",
+      "Payment Received",
+      "Remaining Balance",
+      "Date",
+    ];
 
-    doc.setFontSize(18);
-    doc.text("TRADESTACK", 14, 20);
-
-    doc.setFontSize(11);
-    doc.text("Sales Report", 14, 28);
-
-    doc.setFontSize(9);
-    doc.text(`Report Date: ${new Date().toLocaleDateString("en-US")}`, 14, 34);
-    doc.text(`Total Invoices: ${sales.length}`, 140, 20);
-    doc.text(`Total Receivable: ${formatMoney(totalBalance)}`, 140, 26);
-
-    const tableData = sales.map((sale) => [
+    const tableBody = sales.map((sale) => [
       sale.invoice_number,
-      sale.shop_name,
-      formatMoney(sale.total_amount),
-      formatMoney(sale.discount),
+      sale.shop_name || "Walk-in Customer",
       formatMoney(sale.grand_total),
-      sale.sale_type,
+      sale.sale_type === "cash" ? "Cash" : "Credit",
       formatMoney(sale.payment_received),
       formatMoney(sale.remaining_balance),
       new Date(sale.created_at).toLocaleDateString("en-US"),
     ]);
 
-    autoTable(doc, {
-      head: [
-        [
-          "Invoice",
-          "Customer",
-          "Total",
-          "Discount",
-          "Grand Total",
-          "Type",
-          "Paid",
-          "Balance",
-          "Date",
-        ],
+    await generateStyledPDF({
+      title: "Sales Invoices History & Revenue Report",
+      subtitle: `Total Sales Invoices: ${sales.length}`,
+      filename: `Sales_Report_${new Date().toISOString().split("T")[0]}.pdf`,
+      metaLeft: [
+        `Issued By: TRADESTACK`,
+        `Report Type: Sales Activity Statement`,
+        `Generated: ${new Date().toLocaleString()}`,
       ],
-      body: tableData,
-      startY: 40,
-      margin: 10,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [37, 85, 135] },
+      metaRight: [
+        `Total Invoices: ${sales.length}`,
+        `Total Sales Volume: ${formatMoney(totalSales)}`,
+        `Total Outstanding Balance: ${formatMoney(totalBalance)}`,
+      ],
+      tableHeaders,
+      tableBody,
+      summaryRows: [
+        { label: "Total Revenue Volume:", value: formatMoney(totalSales) },
+        { label: "Total Outstanding Receivable:", value: formatMoney(totalBalance), bold: true },
+      ],
+      qrText: `SALES_REPORT|COUNT:${sales.length}|TOTAL:${totalSales}|DATE:${new Date().toISOString()}`,
+      termsText: "Sales Invoices Audit & History Statement generated via TradeStack billing engine.",
     });
-
-    doc.save(`Sales_Report_${new Date().toISOString().split("T")[0]}.pdf`);
 
     message.success("Exported to PDF successfully");
   };

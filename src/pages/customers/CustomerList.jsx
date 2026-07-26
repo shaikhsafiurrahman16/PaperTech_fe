@@ -25,9 +25,7 @@ import {
   FileExcelOutlined,
   FilePdfOutlined,
 } from "@ant-design/icons";
-import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { generateStyledPDF } from "../../lib/pdfTemplateEngine";
 import api from "../../services/apiClient";
 import usePermissions from "../../hooks/usePermissions";
 
@@ -144,23 +142,14 @@ function CustomerList() {
     message.success("Exported to Excel successfully");
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (filteredCustomers.length === 0) {
       message.warning("No data available to export");
       return;
     }
 
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("TRADESTACK", 14, 20);
-    doc.setFontSize(12);
-    doc.text("Customers Report", 14, 28);
-    doc.setFontSize(9);
-    doc.text(`Report Date: ${new Date().toLocaleDateString("en-US")}`, 14, 34);
-    doc.text(`Total Customers: ${filteredCustomers.length}`, 140, 20);
-    doc.text(`Total Balance: ${formatMoney(totalBalance)}`, 140, 26);
-
-    const tableData = filteredCustomers.map((c) => [
+    const tableHeaders = ["Shop Name", "Full Name", "Phone", "Credit Limit", "Current Balance", "Type"];
+    const tableBody = filteredCustomers.map((c) => [
       c.shop_name,
       c.full_name,
       c.phone,
@@ -169,18 +158,31 @@ function CustomerList() {
       c.customer_type === "star" ? "Star" : "Local",
     ]);
 
-    autoTable(doc, {
-      head: [
-        ["Shop Name", "Full Name", "Phone", "Credit Limit", "Balance", "Type"],
+    await generateStyledPDF({
+      title: "Customers Directory & Ledger Summary",
+      subtitle: `Total Customers: ${filteredCustomers.length}`,
+      filename: `Customers_Report_${new Date().toISOString().split("T")[0]}.pdf`,
+      docKey: `CUSTOMERS_REPORT`,
+      showQRCode: false,
+      showSignature: false,
+      metaLeft: [
+        `Issued By: TRADESTACK`,
+        `Report Type: Customer Accounts Audit`,
+        `Generated: ${new Date().toLocaleString()}`,
       ],
-      body: tableData,
-      startY: 40,
-      margin: 10,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [37, 85, 135] },
+      metaRight: [
+        `Total Customers: ${filteredCustomers.length}`,
+        `Total Credit Limit: ${formatMoney(totalCredit)}`,
+        `Total Balance: ${formatMoney(totalBalance)}`,
+      ],
+      tableHeaders,
+      tableBody,
+      summaryRows: [
+        { label: "Total Customers:", value: String(filteredCustomers.length) },
+        { label: "Total Outstanding Balance:", value: formatMoney(totalBalance), bold: true },
+      ],
     });
 
-    doc.save(`Customers_Report_${new Date().toISOString().split("T")[0]}.pdf`);
     message.success("Exported to PDF successfully");
   };
 

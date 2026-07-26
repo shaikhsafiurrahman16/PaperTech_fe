@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { Row, Col, Card, Table, Typography, message, Statistic, Spin, Tag, Space, Button, DatePicker, Form, Tooltip } from 'antd';
 import { FileExcelOutlined, FilePdfOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { generateStyledPDF } from '../../lib/pdfTemplateEngine';
 import api from '../../services/apiClient';
 
 const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
@@ -77,56 +76,39 @@ function Reports() {
     message.success('Exported to Excel successfully');
   };
 
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text('TRADESTACK - Complete Report', 14, 20);
-
-    doc.setFontSize(10);
-    doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 14, 28);
-
-    let yPosition = 40;
-
-    doc.setFontSize(12);
-    doc.text('Summary', 14, yPosition);
-    yPosition += 8;
-
-    const summaryData = [
+  const exportToPDF = async () => {
+    const tableHeaders = ['Metric / Category', 'Value / Details'];
+    const tableBody = [
       ['Total Sales', summary.total_sales || 0],
       ['Total Customers', summary.total_customers || 0],
-      ['Total Stock', summary.total_stock || 0],
+      ['Total Stock Inventory', summary.total_stock || 0],
       ['Pending Payments', summary.total_pending_payments || 0],
+      ['Low Stock Alert Count', lowStockCount],
     ];
 
-    autoTable(doc, {
-      head: [['Metric', 'Value']],
-      body: summaryData,
-      startY: yPosition,
-      margin: 10,
+    await generateStyledPDF({
+      title: 'Executive Financial & Executive Summary Report',
+      subtitle: 'Complete Trade & Inventory Analytics',
+      filename: `Complete_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+      docKey: `EXECUTIVE_REPORT`,
+      showQRCode: false,
+      showSignature: false,
+      metaLeft: [
+        `Issued By: TRADESTACK`,
+        `Report Type: Complete Management Report`,
+        `Generated: ${new Date().toLocaleString()}`,
+      ],
+      metaRight: [
+        `Total Sales: ${summary.total_sales || 0}`,
+        `Total Customers: ${summary.total_customers || 0}`,
+      ],
+      tableHeaders,
+      tableBody,
+      summaryRows: [
+        { label: 'Total Pending Outstanding:', value: String(summary.total_pending_payments || 0), bold: true },
+      ],
     });
 
-    yPosition = doc.lastAutoTable.finalY + 10;
-
-    doc.setFontSize(12);
-    doc.text('Low Stock Products', 14, yPosition);
-    yPosition += 8;
-
-    const lowStockData = stock.filter(p => p.current_stock <= p.min_stock_alert).map(p => [
-      p.name,
-      p.current_stock,
-      p.min_stock_alert,
-    ]);
-
-    if (lowStockData.length > 0) {
-      autoTable(doc, {
-        head: [['Product', 'Current Stock', 'Alert Level']],
-        body: lowStockData,
-        startY: yPosition,
-        margin: 10,
-      });
-    }
-
-    doc.save(`Complete_Report_${new Date().toISOString().split('T')[0]}.pdf`);
     message.success('Exported to PDF successfully');
   };
 

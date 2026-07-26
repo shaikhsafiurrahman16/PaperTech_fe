@@ -3,8 +3,7 @@ import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { Card, Typography, Table, Button, Space, message, Spin, Descriptions } from "antd";
 import { ArrowLeftOutlined, DownloadOutlined, PrinterOutlined } from "@ant-design/icons";
 import api from "../../services/apiClient";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { downloadInvoicePDF, previewInvoice } from "../../services/pdfDownloadService";
 
 const formatMoney = (value) => `Rs. ${Number(value ?? 0).toFixed(2)}`;
 
@@ -15,6 +14,7 @@ function InvoiceDetails() {
   const [invoice, setInvoice] = useState(null);
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [downloading, setDownloading] = useState(false);
   const invoiceSource = location.state?.invoiceSource === "purchase" ? "purchase" : "sale";
 
   useEffect(() => {
@@ -40,63 +40,42 @@ function InvoiceDetails() {
     fetchInvoice();
   }, [id, invoiceSource]);
 
-  const downloadInvoicePDF = () => {
+  const handleDownloadPDF = async () => {
     if (!invoice) return;
 
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("TRADESTACK", 14, 20);
-    doc.setFontSize(12);
-    doc.text(invoiceSource === "purchase" ? "Purchase Invoice" : "Sale Invoice", 14, 28);
-    doc.setFontSize(9);
-    doc.text(`Invoice #: ${invoice.invoice_number || invoice.purchase_number}`, 14, 36);
-    doc.text(`Date: ${new Date(invoice.created_at).toLocaleString()}`, 14, 42);
-    doc.text(
-      `${invoiceSource === "purchase" ? "Vendor" : "Customer"}: ${invoice.company_name || invoice.shop_name || invoice.full_name || "Walk-in Customer"}`,
-      14,
-      48,
-    );
-
-    const tableData = items.map((item) => [
-      item.product_name,
-      item.quantity,
-      `Rs. ${Number(item.unit_price).toFixed(2)}`,
-      `Rs. ${Number(item.subtotal).toFixed(2)}`,
-    ]);
-
-    autoTable(doc, {
-      head: [["Product", "Qty (Sheets)", "Unit Price", "Subtotal"]],
-      body: tableData,
-      startY: 58,
-      margin: 10,
-      styles: { fontSize: 9 },
-      headStyles: { fillColor: [37, 85, 135] },
-    });
-
-    const finalY = doc.lastAutoTable.finalY + 10;
-    doc.text(`Discount: Rs. ${Number(invoice.discount).toFixed(2)}`, 14, finalY);
-    doc.text(`Grand Total: Rs. ${Number(invoice.grand_total).toFixed(2)}`, 14, finalY + 6);
-    doc.text(
-      `${invoiceSource === "purchase" ? "Payment Paid" : "Payment Received"}: Rs. ${Number(
-        invoiceSource === "purchase" ? invoice.payment_paid : invoice.payment_received,
-      ).toFixed(2)}`,
-      14,
-      finalY + 12,
-    );
-    doc.text(`Remaining Balance: Rs. ${Number(invoice.remaining_balance).toFixed(2)}`, 14, finalY + 18);
-    doc.text(
-      `${invoiceSource === "purchase" ? "Purchase Type" : "Sale Type"}: ${
-        (invoiceSource === "purchase" ? invoice.purchase_type : invoice.sale_type) === "cash" ? "Cash" : "Credit"
-      }`,
-      14,
-      finalY + 24,
-    );
-
-    doc.save(`Invoice_${invoice.invoice_number || invoice.purchase_number}.pdf`);
+    try {
+      setDownloading(true);
+      const invoiceNum = invoice.invoice_number || invoice.purchase_number || `INV-${invoice.id}`;
+      await downloadInvoicePDF(
+        invoiceSource,
+        invoice.id,
+        `Invoice_${invoiceNum}.pdf`
+      );
+      message.success("PDF downloaded successfully!");
+    } catch (error) {
+      message.error(error.response?.data?.message || "Failed to download PDF");
+    } finally {
+      setDownloading(false);
+    }
   };
 
-  const printInvoice = () => {
-    window.print();
+  const handlePreview = () => {
+    if (!invoice) return;
+    try {
+      previewInvoice(invoiceSource, invoice.id);
+    } catch (error) {
+      message.error("Failed to preview invoice");
+    }
+  };
+
+  const handlePrint = () => {
+    if (!invoice) return;
+    try {
+      previewInvoice(invoiceSource, invoice.id);
+      message.info("Invoice opened in new tab. Use Ctrl+P to print.");
+    } catch (error) {
+      message.error("Failed to open invoice for printing");
+    }
   };
 
   const columns = [
@@ -133,10 +112,15 @@ function InvoiceDetails() {
           </Button>
           <Typography.Title level={2}>Invoice Details</Typography.Title>
           <Space>
-            <Button icon={<DownloadOutlined />} type="primary" onClick={downloadInvoicePDF}>
+            <Button 
+              icon={<DownloadOutlined />} 
+              type="primary" 
+              onClick={handleDownloadPDF}
+              loading={downloading}
+            >
               Download PDF
             </Button>
-            <Button icon={<PrinterOutlined />} onClick={printInvoice}>
+            <Button icon={<PrinterOutlined />} onClick={handlePrint}>
               Print
             </Button>
           </Space>

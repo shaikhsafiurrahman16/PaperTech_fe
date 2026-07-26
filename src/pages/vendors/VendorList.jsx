@@ -28,9 +28,7 @@ import {
   ProfileOutlined,
   WalletOutlined,
 } from "@ant-design/icons";
-import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import { generateStyledPDF } from "../../lib/pdfTemplateEngine";
 import api from "../../services/apiClient";
 import usePermissions from "../../hooks/usePermissions";
 
@@ -217,39 +215,45 @@ function VendorList() {
     message.success("Exported to Excel successfully");
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (filteredVendors.length === 0) {
       message.warning("No data available to export");
       return;
     }
 
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("TRADESTACK", 14, 20);
-    doc.setFontSize(12);
-    doc.text("Vendors Report", 14, 28);
-    doc.setFontSize(9);
-    doc.text(`Report Date: ${new Date().toLocaleDateString("en-US")}`, 14, 34);
-    doc.text(`Total Vendors: ${filteredVendors.length}`, 140, 20);
-    doc.text(`Total Payable: ${formatMoney(totalPayable)}`, 140, 26);
+    const tableHeaders = ["Company", "Contact Person", "Phone", "Opening Balance", "Payable Balance"];
+    const tableBody = filteredVendors.map((vendor) => [
+      vendor.company_name,
+      vendor.full_name,
+      vendor.phone,
+      formatMoney(vendor.opening_balance),
+      formatMoney(vendor.current_balance),
+    ]);
 
-    autoTable(doc, {
-      head: [["Company", "Contact", "Phone", "Opening", "Payable", "Username"]],
-      body: filteredVendors.map((vendor) => [
-        vendor.company_name,
-        vendor.full_name,
-        vendor.phone,
-        formatMoney(vendor.opening_balance),
-        formatMoney(vendor.current_balance),
-        vendor.username || "-",
-      ]),
-      startY: 40,
-      margin: 10,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [37, 85, 135] },
+    await generateStyledPDF({
+      title: "Vendor Directory & Payable Report",
+      subtitle: `Total Vendors: ${filteredVendors.length}`,
+      filename: `Vendors_Report_${new Date().toISOString().split("T")[0]}.pdf`,
+      docKey: `VENDORS_REPORT`,
+      showQRCode: false,
+      showSignature: false,
+      metaLeft: [
+        `Issued By: TRADESTACK`,
+        `Report Type: Vendor Audit Report`,
+        `Generated: ${new Date().toLocaleString()}`,
+      ],
+      metaRight: [
+        `Total Vendors: ${filteredVendors.length}`,
+        `Total Payable: ${formatMoney(totalPayable)}`,
+      ],
+      tableHeaders,
+      tableBody,
+      summaryRows: [
+        { label: "Total Vendors:", value: String(filteredVendors.length) },
+        { label: "Total Outstanding Payable:", value: formatMoney(totalPayable), bold: true },
+      ],
     });
 
-    doc.save(`Vendors_Report_${new Date().toISOString().split("T")[0]}.pdf`);
     message.success("Exported to PDF successfully");
   };
 
@@ -260,7 +264,7 @@ function VendorList() {
     }
 
     const data = ledger.map((entry) => ({
-      Date: entry.created_at ? new Date(entry.created_at).toLocaleString("en-US") : "-",
+      Date: entry.created_at ? new Date(entry.created_at).toLocaleString() : "-",
       Type: entry.transaction_type || "-",
       Reference: entry.purchase_number || entry.remarks || "-",
       Amount: formatMoney(entry.amount),
@@ -271,41 +275,53 @@ function VendorList() {
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Ledger");
-    XLSX.writeFile(wb, `${selectedVendor?.company_name || "Vendor"}_Ledger_${new Date().toISOString().split("T")[0]}.xlsx`);
+    XLSX.writeFile(
+      wb,
+      `${selectedVendor?.company_name || "Vendor"}_Ledger_${new Date().toISOString().split("T")[0]}.xlsx`,
+    );
     message.success("Ledger exported to Excel");
   };
 
-  const exportLedgerToPDF = () => {
+  const exportLedgerToPDF = async () => {
     if (ledger.length === 0) {
       message.warning("No ledger data to export");
       return;
     }
 
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text("TRADESTACK", 14, 20);
-    doc.setFontSize(14);
-    doc.text(`${selectedVendor?.company_name || "Vendor"} - Ledger`, 14, 28);
-    doc.setFontSize(9);
-    doc.text(`Report Date: ${new Date().toLocaleDateString("en-US")}`, 14, 34);
+    const vendorName = selectedVendor?.company_name || "Vendor";
+    const tableHeaders = ["Date", "Type", "Reference", "Amount", "Previous", "Current Balance"];
+    const tableBody = ledger.map((entry) => [
+      entry.created_at ? new Date(entry.created_at).toLocaleString("en-US") : "-",
+      entry.transaction_type || "-",
+      entry.purchase_number || entry.remarks || "-",
+      formatMoney(entry.amount),
+      formatMoney(entry.previous_balance),
+      formatMoney(entry.current_balance),
+    ]);
 
-    autoTable(doc, {
-      head: [["Date", "Type", "Reference", "Amount", "Previous", "Current Balance"]],
-      body: ledger.map((entry) => [
-        entry.created_at ? new Date(entry.created_at).toLocaleString("en-US") : "-",
-        entry.transaction_type || "-",
-        entry.purchase_number || entry.remarks || "-",
-        formatMoney(entry.amount),
-        formatMoney(entry.previous_balance),
-        formatMoney(entry.current_balance),
-      ]),
-      startY: 40,
-      margin: 10,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [37, 85, 135] },
+    await generateStyledPDF({
+      title: `${vendorName} - Account Ledger`,
+      subtitle: `Vendor Statement of Account`,
+      filename: `${vendorName}_Ledger_${new Date().toISOString().split("T")[0]}.pdf`,
+      docKey: `VENDOR_LEDGER_${selectedVendor?.id}`,
+      showQRCode: false,
+      showSignature: false,
+      metaLeft: [
+        `Vendor: ${vendorName}`,
+        `Contact Person: ${selectedVendor?.full_name || "N/A"}`,
+        `Phone: ${selectedVendor?.phone || "N/A"}`,
+      ],
+      metaRight: [
+        `Statement Date: ${new Date().toLocaleDateString("en-US")}`,
+        `Current Payable: ${formatMoney(selectedVendor?.current_balance || 0)}`,
+      ],
+      tableHeaders,
+      tableBody,
+      summaryRows: [
+        { label: "Closing Payable Balance:", value: formatMoney(selectedVendor?.current_balance || 0), bold: true },
+      ],
     });
 
-    doc.save(`${selectedVendor?.company_name || "Vendor"}_Ledger_${new Date().toISOString().split("T")[0]}.pdf`);
     message.success("Ledger exported to PDF");
   };
 

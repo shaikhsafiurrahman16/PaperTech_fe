@@ -25,10 +25,8 @@ import {
   FilePdfOutlined,
   EditOutlined,
 } from "@ant-design/icons";
+import { generateStyledPDF } from "../../lib/pdfTemplateEngine";
 import api from "../../services/apiClient";
-import * as XLSX from "xlsx";
-import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
 import usePermissions from "../../hooks/usePermissions";
 import { APP_NAME, getIndustryConfig } from "../../constants/industryConfig";
 import { useSelector } from "react-redux";
@@ -178,53 +176,48 @@ function ProductList() {
     XLSX.writeFile(wb, "products.xlsx");
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (filteredProducts.length === 0) {
       message.warning("No data available to export");
       return;
     }
 
-    const doc = new jsPDF();
-    doc.setFontSize(18);
-    doc.text(APP_NAME.toUpperCase(), 14, 18);
-    doc.setFontSize(12);
-    doc.text("Products Inventory Report", 14, 26);
-    doc.setFontSize(9);
-    doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 14, 32);
-    doc.text(`Total Products: ${filteredProducts.length}`, 140, 26);
-
-    const tableData = filteredProducts.map((p) => [
+    const tableHeaders = ["Name", "Type", "Size", "Gram", "Cost Price", "Sale Price", "Current Stock"];
+    const tableBody = filteredProducts.map((p) => [
       p.name,
-      p.product_type,
-      ...(industryConfig.showPaperFields ? [p.size || "", p.gram || "", p.sheets_per_pack] : []),
-      ...industryConfig.specFields.slice(0, 3).map((field) => p.product_specs?.[field.name] || ""),
-      p.unit_type,
-      `Rs. ${Number(p.cost_price).toFixed(2)}`,
-      `Rs. ${Number(p.sale_price).toFixed(2)}`,
-      p.current_stock,
-      p.min_stock_alert,
+      p.product_type || "-",
+      p.size || "-",
+      p.gram || "-",
+      `Rs. ${Number(p.cost_price || 0).toFixed(2)}`,
+      `Rs. ${Number(p.sale_price || 0).toFixed(2)}`,
+      p.current_stock || 0,
     ]);
 
-    autoTable(doc, {
-      head: [[
-        "Name",
-        industryConfig.typeLabel,
-        ...(industryConfig.showPaperFields ? ["Size", "Gram"] : industryConfig.specFields.slice(0, 3).map((field) => field.label)),
-        "Unit",
-        ...(industryConfig.showPaperFields ? ["Sheets"] : []),
-        "Cost Price",
-        "Sale Price",
-        "Stock",
-        "Alert",
-      ]],
-      body: tableData,
-      startY: 38,
-      margin: 10,
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [37, 85, 135] },
-    });
+    const totalStock = filteredProducts.reduce((sum, p) => sum + Number(p.current_stock || 0), 0);
 
-    doc.save(`Products_Report_${new Date().toISOString().split('T')[0]}.pdf`);
+    await generateStyledPDF({
+      title: "Products Inventory & Stock Catalog",
+      subtitle: `Total Products: ${filteredProducts.length}`,
+      filename: `Products_Report_${new Date().toISOString().split("T")[0]}.pdf`,
+      docKey: `PRODUCTS_REPORT`,
+      showQRCode: false,
+      showSignature: false,
+      metaLeft: [
+        `Issued By: ${APP_NAME}`,
+        `Report Type: Inventory Stock Audit`,
+        `Generated: ${new Date().toLocaleString()}`,
+      ],
+      metaRight: [
+        `Total Product Lines: ${filteredProducts.length}`,
+        `Total Stock Units: ${totalStock}`,
+      ],
+      tableHeaders,
+      tableBody,
+      summaryRows: [
+        { label: "Total Product Items:", value: String(filteredProducts.length) },
+        { label: "Total Stock Inventory:", value: String(totalStock), bold: true },
+      ],
+    });
   };
 
   const lowStockProducts = products.filter(

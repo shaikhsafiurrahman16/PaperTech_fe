@@ -31,7 +31,7 @@ function PaymentList() {
       setPayments(paymentsRes.data.data || []);
       setCustomers(customersRes.data.data || []);
     } catch (error) {
-      message.error('Failed to load payments');
+      message.error('Failed to load paymentsssss');
     } finally {
       setPageLoading(false);
     }

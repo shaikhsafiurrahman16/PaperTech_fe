@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { Table, Button, Space, message, Row, Col, Card, Statistic, Spin, Empty, Tooltip } from 'antd';
 import { FileExcelOutlined, FilePdfOutlined, PrinterOutlined, DownloadOutlined, EyeOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
+import { generateStyledPDF } from '../../lib/pdfTemplateEngine';
 import api from '../../services/apiClient';
 import { useSelector } from 'react-redux';
 
@@ -68,52 +67,46 @@ function CustomerSalesPage() {
     message.success('Exported to Excel successfully');
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (sales.length === 0) {
       message.warning('No data available to export');
       return;
     }
 
-    const doc = new jsPDF();
-    const pageHeight = doc.internal.pageSize.getHeight();
-    const pageWidth = doc.internal.pageSize.getWidth();
-    
-    doc.setFontSize(18);
-    doc.text('TRADESTACK - Sales Report', 14, 20);
-    
-    doc.setFontSize(10);
-    doc.text(`Customer: ${user?.full_name || user?.username}`, 14, 28);
-    doc.text(`Report Date: ${new Date().toLocaleDateString('en-US')}`, 14, 34);
-    
-    const tableData = sales.map(sale => [
+    const customerName = user?.full_name || user?.username || 'Customer';
+    const tableHeaders = ['Invoice', 'Grand Total', 'Payment Paid', 'Remaining Balance', 'Type', 'Date'];
+    const tableBody = sales.map(sale => [
       sale.invoice_number,
-      formatMoney(sale.total_amount),
-      formatMoney(sale.discount),
       formatMoney(sale.grand_total),
       formatMoney(sale.payment_received),
       formatMoney(sale.remaining_balance),
-      sale.sale_type,
+      sale.sale_type === 'cash' ? 'Cash' : 'Credit',
       new Date(sale.created_at).toLocaleDateString('en-US'),
     ]);
 
-    autoTable(doc, {
-      head: [['Invoice', 'Total', 'Discount', 'Grand Total', 'Paid', 'Balance', 'Type', 'Date']],
-      body: tableData,
-      startY: 42,
-      margin: 10,
-      didDrawPage: (data) => {
-        const pageCount = doc.internal.getNumberOfPages();
-        doc.setFontSize(10);
-        doc.text(
-          `Page ${data.pageNumber} of ${pageCount}`,
-          pageWidth / 2,
-          pageHeight - 10,
-          { align: 'center' }
-        );
-      },
+    await generateStyledPDF({
+      title: `${customerName} - Purchase & Invoice History`,
+      subtitle: `Customer Account Statement`,
+      filename: `Sales_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+      metaLeft: [
+        `Customer: ${customerName}`,
+        `Report Type: Customer Purchase Audit`,
+        `Generated: ${new Date().toLocaleString()}`,
+      ],
+      metaRight: [
+        `Total Orders: ${sales.length}`,
+        `Total Purchased Volume: ${formatMoney(totalSales)}`,
+      ],
+      tableHeaders,
+      tableBody,
+      summaryRows: [
+        { label: 'Total Purchase Amount:', value: formatMoney(totalSales) },
+        { label: 'Total Outstanding Balance:', value: formatMoney(totalPending), bold: true },
+      ],
+      qrText: `CUST_SALES|CUST:${customerName}|TOTAL:${totalSales}|BAL:${totalPending}|DATE:${new Date().toISOString()}`,
+      termsText: 'Customer Statement & Sales Purchase Record verified by TradeStack.',
     });
 
-    doc.save(`Sales_Report_${new Date().toISOString().split('T')[0]}.pdf`);
     message.success('Exported to PDF successfully');
   };
 

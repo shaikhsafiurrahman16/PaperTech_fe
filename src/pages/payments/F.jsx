@@ -2,10 +2,8 @@ import { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Select, InputNumber, Input, message, Typography, Card, Row, Col, Statistic, Space, Spin, Popconfirm, DatePicker, Tooltip } from 'antd';
 import { PlusOutlined, FileExcelOutlined, FilePdfOutlined, EditOutlined, DeleteOutlined } from '@ant-design/icons';
 import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import api from '../../services/apiClient';
-import { addPdfBrandHeader, addPdfPageFooters } from '../../lib/pdfToolkit';
+import { generateStyledPDF } from '../../lib/pdfTemplateEngine';
 import PageHeader from '../../components/layout/PageHeader';
 
 const formatMoney = value => `Rs. ${Number(value ?? 0).toFixed(2)}`;
@@ -33,7 +31,8 @@ function PaymentList() {
       setPayments(paymentsRes.data.data || []);
       setCustomers(customersRes.data.data || []);
     } catch (error) {
-      message.error('Failed to load payments');
+      console.error('Failed to load payments:', error);
+      message.error(error.response?.data?.message || error.message || 'Failed to load payments');
     } finally {
       setPageLoading(false);
     }
@@ -89,44 +88,45 @@ function PaymentList() {
     message.success('Exported to Excel successfully');
   };
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     if (payments.length === 0) {
       message.warning('No data available to export');
       return;
     }
 
-    const doc = new jsPDF();
-    const startY = addPdfBrandHeader(doc, {
-      title: 'Payments Report',
-      subtitle: 'Customer payment activity',
-      metaLeft: [
-        `Report Date: ${new Date().toLocaleDateString('en-US')}`,
-      ],
-      metaRight: [
-        `Total Payments: ${payments.length}`,
-        `Total Amount: ${formatMoney(totalPayments)}`,
-      ],
-    });
-
-    const tableData = payments.map(p => [
-      p.shop_name,
+    const tableHeaders = ['Customer', 'Amount Received', 'Payment Method', 'Date'];
+    const tableBody = payments.map(p => [
+      p.shop_name || 'Customer',
       formatMoney(p.amount),
-      p.payment_method,
+      p.payment_method || 'Cash',
       new Date(p.created_at).toLocaleDateString('en-US'),
     ]);
 
-    autoTable(doc, {
-      head: [['Customer', 'Amount', 'Method', 'Date']],
-      body: tableData,
-      startY,
-      margin: 10,
-      styles: { fontSize: 8, cellPadding: 3 },
-      headStyles: { fillColor: [91, 82, 217] },
-      alternateRowStyles: { fillColor: [248, 250, 252] },
+    await generateStyledPDF({
+      title: 'Payments & Financial Voucher Report',
+      subtitle: 'Payment Activity Statement',
+      filename: `Payments_Report_${new Date().toISOString().split('T')[0]}.pdf`,
+      docKey: `PAYMENTS_REPORT`,
+      showQRCode: true,
+      showSignature: false,
+      metaLeft: [
+        `Issued By: TRADESTACK`,
+        `Report Type: Payment Audit Voucher`,
+        `Generated: ${new Date().toLocaleString()}`,
+      ],
+      metaRight: [
+        `Total Transactions: ${payments.length}`,
+        `Total Amount: ${formatMoney(totalPayments)}`,
+      ],
+      tableHeaders,
+      tableBody,
+      summaryRows: [
+        { label: 'Total Receipts Count:', value: String(payments.length) },
+        { label: 'Total Amount:', value: formatMoney(totalPayments), bold: true },
+      ],
+      qrText: `PAYMENTS_REPORT|COUNT:${payments.length}|TOTAL:${totalPayments}|DATE:${new Date().toISOString()}`,
     });
 
-    addPdfPageFooters(doc);
-    doc.save(`Payments_Report_${new Date().toISOString().split('T')[0]}.pdf`);
     message.success('Exported to PDF successfully');
   };
 
