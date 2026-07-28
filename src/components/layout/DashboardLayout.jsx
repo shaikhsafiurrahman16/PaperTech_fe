@@ -36,7 +36,7 @@ const PurchaseList = lazy(() => import("../../pages/purchases/PurchaseList"));
 const ProductList = lazy(() => import("../../pages/products/ProductList"));
 const SalesHistory = lazy(() => import("../../pages/sales/SalesHistory"));
 const InvoiceDetails = lazy(() => import("../../pages/invoices/InvoiceDetails"));
-const PaymentList = lazy(() => import("../../pages/payments/F.jsx"));
+const PaymentList = lazy(() => import("../../pages/payments/PaymentList.jsx"));
 const Reports = lazy(() => import("../../pages/reports/Reports"));
 const LedgerView = lazy(() => import("../../pages/ledger/LedgerView"));
 const CustomerSalesPage = lazy(() => import("../../pages/sales/CustomerSalesPage"));

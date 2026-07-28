@@ -5,34 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 3000",
-    "electron": "electron .",
-    "electron:dev": "node electron/dev.cjs",
-    "electro:dev": "node electron/dev.cjs",
     "build": "vite build",
-    "desktop:build": "npm run build && electron-builder",
     "preview": "vite preview"
-  },
-  "main": "electron/main.cjs",
-  "build": {
-    "appId": "com.papertech.erp",
-    "productName": "PaperTech",
-    "directories": {
-      "output": "release"
-    },
-    "files": [
-      "dist/**",
-      "electron/**",
-      "package.json"
-    ],
-    "win": {
-      "target": "nsis"
-    },
-    "mac": {
-      "target": "dmg"
-    },
-    "linux": {
-      "target": "AppImage"
-    }
   },
   "dependencies": {
     "@ant-design/icons": "^5.2.3",
@@ -50,12 +24,6 @@
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.3.1",
-    "autoprefixer": "^10.5.0",
-    "cross-env": "^7.0.3",
-    "electron": "^31.7.7",
-    "electron-builder": "^24.13.3",
-    "postcss": "^8.5.14",
-    "tailwindcss": "^4.2.4",
     "vite": "^5.4.1"
   }
 }
